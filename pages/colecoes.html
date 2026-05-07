@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coleções — Lumyra</title>
+  <meta name="description" content="Explore a coleção completa de joias, alianças e relógios Lumyra.">
+  <link rel="stylesheet" href="../assets/css/lumyra.css">
+  <script src="https://js.stripe.com/v3/" async></script>
+
+  <style>
+    /* ── PAGE HEADER ────────────────────────────────────── */
+    .page-hero {
+      padding: 160px 64px 80px;
+      border-bottom: 1px solid var(--bone);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: flex-end;
+      gap: 40px;
+    }
+    .page-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(56px, 7vw, 96px);
+      font-weight: 300;
+      line-height: 0.95;
+    }
+    .page-hero h1 em { font-style: italic; color: var(--gold); }
+    .page-hero-meta {
+      padding-bottom: 8px;
+    }
+    .page-hero-meta p {
+      font-size: 13px;
+      color: var(--warm-gray);
+      line-height: 1.8;
+      max-width: 360px;
+      margin-bottom: 24px;
+    }
+    .product-count {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+    .product-count span { color: var(--gold); }
+
+    /* ── FILTER BAR ─────────────────────────────────────── */
+    .filter-bar {
+      padding: 32px 64px;
+      border-bottom: 1px solid var(--bone);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      position: sticky;
+      top: 72px;
+      background: rgba(249, 246, 240, 0.96);
+      backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 0;
+      list-style: none;
+    }
+    .filter-tab {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+      padding: 10px 24px;
+      border: 1px solid var(--bone);
+      margin-left: -1px;
+      cursor: none;
+      transition: all 0.25s;
+      background: transparent;
+      user-select: none;
+    }
+    .filter-tab:hover { color: var(--ink); border-color: var(--ink); z-index: 1; }
+    .filter-tab.active {
+      background: var(--ink);
+      color: var(--cream);
+      border-color: var(--ink);
+      z-index: 1;
+    }
+    .filter-sort {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .filter-sort label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+    .filter-sort select {
+      background: transparent;
+      border: 1px solid var(--bone);
+      padding: 8px 16px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--ink);
+      outline: none;
+      cursor: none;
+      transition: border-color 0.25s;
+    }
+    .filter-sort select:focus { border-color: var(--gold); }
+
+    /* ── PRODUCT GRID ───────────────────────────────────── */
+    .catalog-section { padding: 0 64px 120px; }
+
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-left: 1px solid var(--bone);
+      border-top: 1px solid var(--bone);
+    }
+
+    .catalog-card {
+      border-right: 1px solid var(--bone);
+      border-bottom: 1px solid var(--bone);
+      position: relative;
+      overflow: hidden;
+      cursor: none;
+      transition: box-shadow 0.4s;
+    }
+    .catalog-card:hover { z-index: 2; }
+
+    .catalog-img-wrap {
+      overflow: hidden;
+      aspect-ratio: 3 / 4;
+      background: var(--bone);
+      position: relative;
+    }
+    .catalog-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.5s;
+      filter: grayscale(5%);
+    }
+    .catalog-card:hover .catalog-img-wrap img {
+      transform: scale(1.07);
+      filter: grayscale(0%);
+    }
+
+    /* Badge de categoria */
+    .catalog-badge {
+      position: absolute;
+      top: 20px; left: 20px;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ink);
+      background: var(--cream);
+      padding: 5px 12px;
+      z-index: 2;
+    }
+
+    .catalog-info {
+      padding: 24px 28px 28px;
+      background: var(--cream);
+    }
+    .catalog-cat {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .catalog-name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .catalog-detail {
+      font-size: 12px;
+      color: var(--warm-gray);
+      margin-bottom: 20px;
+    }
+    .catalog-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .catalog-price {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--charcoal);
+    }
+    .catalog-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-detail {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+      border: 1px solid var(--bone);
+      padding: 8px 16px;
+      background: transparent;
+      cursor: none;
+      transition: all 0.25s;
+      text-decoration: none;
+    }
+    .btn-detail:hover { border-color: var(--ink); color: var(--ink); }
+
+    .btn-add {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cream);
+      border: 1px solid var(--ink);
+      padding: 8px 16px;
+      background: var(--ink);
+      cursor: none;
+      transition: all 0.25s;
+    }
+    .btn-add:hover { background: var(--gold); border-color: var(--gold); }
+
+    /* Empty state */
+    .catalog-empty {
+      grid-column: span 3;
+      padding: 120px 40px;
+      text-align: center;
+    }
+    .catalog-empty-title {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 300;
+      color: var(--warm-gray);
+      margin-bottom: 16px;
+    }
+    .catalog-empty-sub {
+      font-size: 13px;
+      color: var(--warm-gray);
+      line-height: 1.8;
+    }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bone) 25%, var(--cream) 50%, var(--bone) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 2px;
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+    .skeleton-card {
+      border-right: 1px solid var(--bone);
+      border-bottom: 1px solid var(--bone);
+    }
+    .skeleton-img  { aspect-ratio: 3/4; }
+    .skeleton-line { height: 14px; margin: 16px 28px 8px; }
+    .skeleton-line.short { width: 60%; }
+
+    /* ── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .page-hero    { padding: 140px 32px 60px; grid-template-columns: 1fr; }
+      .filter-bar   { padding: 24px 32px; flex-wrap: wrap; top: 62px; }
+      .catalog-section { padding: 0 32px 80px; }
+      .catalog-grid { grid-template-columns: repeat(2, 1fr); }
+      .catalog-empty { grid-column: span 2; }
+    }
+    @media (max-width: 640px) {
+      .page-hero    { padding: 120px 24px 48px; }
+      .filter-bar   { padding: 20px 24px; top: 58px; }
+      .filter-tabs  { overflow-x: auto; padding-bottom: 4px; }
+      .catalog-section { padding: 0 24px 60px; }
+      .catalog-grid { grid-template-columns: 1fr; }
+      .catalog-empty { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── PAGE HERO ──────────────────────────────────────────── -->
+<section class="page-hero">
+  <div>
+    <div class="eyebrow" style="margin-bottom:20px">Lumyra — Catálogo</div>
+    <h1>Nossa<br><em>Coleção</em></h1>
+  </div>
+  <div class="page-hero-meta">
+    <p>
+      Joias, alianças e relógios criados para atravessar
+      o tempo. Cada peça, um objeto com intenção.
+    </p>
+    <div class="product-count" id="productCount">
+      <span id="countNum">—</span> peças disponíveis
+    </div>
+  </div>
+</section>
+
+<!-- ─── FILTER BAR ──────────────────────────────────────────── -->
+<div class="filter-bar" role="navigation" aria-label="Filtros de categoria">
+  <ul class="filter-tabs" role="tablist">
+    <li class="filter-tab active" role="tab" data-cat="todas" tabindex="0">Todas</li>
+    <li class="filter-tab" role="tab" data-cat="joias"    tabindex="0">Joias</li>
+    <li class="filter-tab" role="tab" data-cat="aliancas" tabindex="0">Alianças</li>
+    <li class="filter-tab" role="tab" data-cat="relogios" tabindex="0">Relógios</li>
+  </ul>
+
+  <div class="filter-sort">
+    <label for="sortSelect">Ordenar</label>
+    <select id="sortSelect">
+      <option value="default">Destaques</option>
+      <option value="price-asc">Menor preço</option>
+      <option value="price-desc">Maior preço</option>
+      <option value="name">Nome A–Z</option>
+    </select>
+  </div>
+</div>
+
+<!-- ─── CATALOG GRID ────────────────────────────────────────── -->
+<section class="catalog-section">
+  <div class="catalog-grid" id="catalogGrid" role="list" aria-label="Lista de produtos">
+    <!-- Skeleton inicial -->
+    ${Array.from({length:6}).map(() => `
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-img"></div>
+        <div class="skeleton skeleton-line" style="width:45%"></div>
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line short"></div>
+        <div style="height:24px"></div>
+      </div>`).join('')}
+  </div>
+</section>
+
+<!-- ─── FOOTER ──────────────────────────────────────────────── -->
+<div id="footer-mount"></div>
+
+<!-- ─── SCRIPTS ─────────────────────────────────────────────── -->
+<script src="../js/services/CartService.js"></script>
+<script src="../js/services/ProductService.js"></script>
+<script src="../js/services/StripeService.js"></script>
+<script src="../js/components/Header.js"></script>
+<script src="../js/main.js"></script>
+
+<script>
+  /* ── Estado da página ─────────────────────────────────── */
+  let _allProducts   = [];
+  let _activeCategory = 'todas';
+  let _sortOrder      = 'default';
+
+  /* ── Inicialização ────────────────────────────────────── */
+  (async function initColecoes() {
+    // Lê categoria da URL (ex: ?categoria=aliancas)
+    const params = Router.getParams();
+    if (params.categoria) {
+      _activeCategory = params.categoria;
+      document.querySelectorAll('.filter-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.cat === _activeCategory);
+      });
+    }
+
+    try {
+      _allProducts = await ProductService.fetchAll();
+      renderCatalog();
+    } catch (err) {
+      document.getElementById('catalogGrid').innerHTML =
+        `<div class="catalog-empty">
+           <div class="catalog-empty-title">Erro ao carregar</div>
+           <div class="catalog-empty-sub">Recarregue a página para tentar novamente.</div>
+         </div>`;
+      console.error('[Colecoes] initColecoes:', err);
+    }
+
+    // Bind filtros
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        _activeCategory = tab.dataset.cat;
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderCatalog();
+      });
+      // Acessibilidade: Enter / Space ativa o tab
+      tab.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tab.click(); }
+      });
+    });
+
+    document.getElementById('sortSelect').addEventListener('change', e => {
+      _sortOrder = e.target.value;
+      renderCatalog();
+    });
+  })();
+
+  /* ── Render ───────────────────────────────────────────── */
+  function renderCatalog() {
+    const grid = document.getElementById('catalogGrid');
+
+    // 1. Filtra
+    let products = _activeCategory === 'todas'
+      ? [..._allProducts]
+      : _allProducts.filter(p => p.cat === _activeCategory);
+
+    // 2. Ordena
+    if (_sortOrder === 'price-asc')  products.sort((a, b) => a.price - b.price);
+    if (_sortOrder === 'price-desc') products.sort((a, b) => b.price - a.price);
+    if (_sortOrder === 'name')       products.sort((a, b) => a.name.localeCompare(b.name));
+
+    // 3. Atualiza contador
+    document.getElementById('countNum').textContent = products.length;
+
+    // 4. Vazio
+    if (products.length === 0) {
+      grid.innerHTML = `
+        <div class="catalog-empty">
+          <div class="catalog-empty-title">Nenhuma peça encontrada</div>
+          <div class="catalog-empty-sub">Tente outra categoria.</div>
+        </div>`;
+      return;
+    }
+
+    // 5. Renderiza cards
+    grid.innerHTML = products.map((p, i) => `
+      <article class="catalog-card reveal${i > 0 ? ' reveal-delay-' + Math.min(i % 3, 3) : ''}"
+               role="listitem" data-hover>
+        <a href="produto.html?id=${p.id}" aria-label="Ver detalhes de ${p.name}">
+          <div class="catalog-img-wrap">
+            <span class="catalog-badge">${p.catLabel}</span>
+            <img src="${p.img}" alt="${p.name}" loading="lazy">
+          </div>
+        </a>
+        <div class="catalog-info">
+          <div class="catalog-cat">${p.catLabel}</div>
+          <div class="catalog-name">${p.name}</div>
+          <div class="catalog-detail">${p.detail}</div>
+          <div class="catalog-footer">
+            <div class="catalog-price">${CartService.formatCurrency(p.price)}</div>
+            <div class="catalog-actions">
+              <a class="btn-detail" href="produto.html?id=${p.id}">Detalhes</a>
+              <button class="btn-add"
+                      onclick="CartService.add({id:'${p.id}',name:'${p.name}',price:${p.price},cat:'${p.catLabel}',img:'${p.img}'});
+                               Toast.show('${p.name} adicionado');"
+                      aria-label="Adicionar ${p.name} ao carrinho">
+                + Carrinho
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    `).join('');
+
+    // Re-observa para animações reveal
+    grid.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+      new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+      }, { threshold: 0.08 }).observe(el);
+    });
+  }
+</script>
+
+</body>
+</html>

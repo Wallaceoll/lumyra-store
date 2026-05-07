@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — Lumyra</title>
+  <link rel="stylesheet" href="../assets/css/lumyra.css">
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <style>
+    /* ── LAYOUT ─────────────────────────────────────────── */
+    .checkout-page {
+      min-height: 100vh;
+      padding: 120px 64px 80px;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 64px;
+      align-items: start;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* ── FORM SIDE ───────────────────────────────────────── */
+    .checkout-form-side {}
+
+    .checkout-page-title {
+      font-family: var(--font-display);
+      font-size: clamp(40px, 5vw, 64px);
+      font-weight: 300;
+      line-height: 1.0;
+      margin-bottom: 8px;
+    }
+    .checkout-page-title em { font-style: italic; color: var(--gold); }
+
+    .checkout-subtitle {
+      font-size: 13px;
+      color: var(--warm-gray);
+      margin-bottom: 56px;
+      line-height: 1.7;
+    }
+
+    /* Steps indicator */
+    .checkout-steps {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 48px;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      border: 1px solid var(--bone);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      transition: all 0.3s;
+    }
+    .step.active .step-num {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .step.done .step-num {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--cream);
+    }
+    .step.active { color: var(--ink); }
+    .step-line {
+      flex: 1; height: 1px;
+      background: var(--bone);
+      margin: 0 16px;
+    }
+
+    /* Sections */
+    .form-section {
+      margin-bottom: 44px;
+      display: none;
+    }
+    .form-section.active { display: block; }
+
+    .form-section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .form-section-num {
+      width: 32px; height: 32px;
+      background: var(--ink); color: var(--cream);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600;
+      flex-shrink: 0;
+    }
+    .form-section-title {
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+    .form-section-title::after {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 1px;
+      background: var(--bone);
+      margin-top: 6px;
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+    .form-group input,
+    .form-group select {
+      background: var(--cream);
+      border: 1px solid var(--bone);
+      padding: 13px 16px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.25s;
+      width: 100%;
+    }
+    .form-group input:focus,
+    .form-group select:focus { border-color: var(--gold); }
+    .form-group input::placeholder { color: var(--warm-gray); opacity: 0.7; }
+    .form-group input.error { border-color: var(--error); }
+
+    .field-error {
+      font-size: 11px;
+      color: var(--error);
+      margin-top: -8px;
+      margin-bottom: 4px;
+      display: none;
+      letter-spacing: 0.05em;
+    }
+    .field-error.visible { display: block; }
+
+    /* Navigation buttons */
+    .form-nav {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .btn-next {
+      flex: 1;
+      background: var(--ink); color: var(--cream);
+      border: none; padding: 18px 32px;
+      font-family: var(--font-body);
+      font-size: 11px; letter-spacing: 0.3em;
+      text-transform: uppercase; cursor: none;
+      transition: background 0.3s;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+    }
+    .btn-next:hover { background: var(--gold); }
+    .btn-prev {
+      background: transparent; color: var(--warm-gray);
+      border: 1px solid var(--bone);
+      padding: 18px 24px;
+      font-family: var(--font-body);
+      font-size: 11px; letter-spacing: 0.2em;
+      text-transform: uppercase; cursor: none;
+      transition: all 0.25s;
+    }
+    .btn-prev:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* Stripe card element */
+    #card-element {
+      background: var(--cream);
+      border: 1px solid var(--bone);
+      padding: 14px 16px;
+      transition: border-color 0.25s;
+    }
+    #card-element.StripeElement--focus  { border-color: var(--gold); }
+    #card-element.StripeElement--invalid { border-color: var(--error); }
+
+    .card-error {
+      font-size: 11px; color: var(--error);
+      margin-top: 6px; display: none;
+      letter-spacing: 0.05em;
+    }
+    .card-error.visible { display: block; }
+
+    /* Pay button */
+    .pay-btn {
+      width: 100%; background: var(--gold); color: var(--ink);
+      border: none; padding: 22px;
+      font-family: var(--font-body);
+      font-size: 12px; letter-spacing: 0.35em;
+      text-transform: uppercase; cursor: none;
+      transition: background 0.3s, letter-spacing 0.3s;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      margin-top: 24px;
+    }
+    .pay-btn:hover:not(:disabled) { background: var(--gold-light); }
+    .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .pay-security {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin-top: 14px;
+      font-size: 10px; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--warm-gray);
+    }
+
+    /* Payment methods icons */
+    .payment-methods {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .pm-badge {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border: 1px solid var(--bone);
+      padding: 5px 12px;
+      color: var(--warm-gray);
+    }
+
+    /* ── ORDER SUMMARY SIDE ──────────────────────────────── */
+    .checkout-summary {
+      position: sticky;
+      top: 100px;
+      background: var(--bone);
+      padding: 40px;
+    }
+
+    .summary-title {
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .summary-title::after {
+      content: ''; flex: 1;
+      height: 1px; background: rgba(0,0,0,0.1);
+    }
+
+    .summary-items { margin-bottom: 28px; }
+
+    .summary-item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .summary-item:last-child { border-bottom: none; }
+
+    .summary-item-img {
+      width: 64px; height: 64px;
+      object-fit: cover;
+      background: var(--cream);
+    }
+    .summary-item-name {
+      font-family: var(--font-display);
+      font-size: 16px; font-weight: 400;
+    }
+    .summary-item-cat {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+      margin-bottom: 2px;
+    }
+    .summary-item-qty {
+      font-size: 11px; color: var(--warm-gray);
+    }
+    .summary-item-price {
+      font-family: var(--font-display);
+      font-size: 17px;
+      white-space: nowrap;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 8px 0;
+      color: var(--charcoal);
+    }
+    .summary-line.total {
+      border-top: 1px solid rgba(0,0,0,0.12);
+      margin-top: 8px;
+      padding-top: 18px;
+    }
+    .summary-line.total .label {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+    .summary-line.total .val {
+      font-family: var(--font-display);
+      font-size: 26px;
+    }
+
+    .summary-promo {
+      margin-top: 20px;
+      display: flex;
+      gap: 0;
+    }
+    .promo-input {
+      flex: 1;
+      background: var(--cream);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-right: none;
+      padding: 11px 14px;
+      font-family: var(--font-body);
+      font-size: 12px; color: var(--ink);
+      outline: none;
+    }
+    .promo-input::placeholder { color: var(--warm-gray); opacity: 0.7; }
+    .promo-btn {
+      background: var(--ink); color: var(--cream);
+      border: none; padding: 11px 18px;
+      font-size: 10px; letter-spacing: 0.2em;
+      text-transform: uppercase; cursor: none;
+      transition: background 0.25s;
+    }
+    .promo-btn:hover { background: var(--gold); }
+
+    /* Empty cart warning */
+    .empty-cart-warning {
+      text-align: center;
+      padding: 80px 32px;
+    }
+    .empty-cart-warning h2 {
+      font-family: var(--font-display);
+      font-size: 36px; font-weight: 300;
+      color: var(--warm-gray);
+      margin-bottom: 16px;
+    }
+    .empty-cart-warning a {
+      font-size: 11px; letter-spacing: 0.25em;
+      text-transform: uppercase; color: var(--gold);
+    }
+
+    /* ── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .checkout-page {
+        padding: 110px 32px 60px;
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .checkout-summary { position: static; }
+      /* Summary fica acima do form em mobile */
+      .checkout-form-side { order: 2; }
+      .checkout-summary  { order: 1; }
+    }
+    @media (max-width: 640px) {
+      .checkout-page { padding: 100px 24px 48px; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .checkout-steps { gap: 4px; }
+      .step-line { margin: 0 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<main class="checkout-page" id="checkoutPage">
+
+  <!-- ─── FORM SIDE ──────────────────────────────────────── -->
+  <div class="checkout-form-side" id="formSide">
+
+    <div class="eyebrow" style="margin-bottom:20px">Finalizar Pedido</div>
+    <h1 class="checkout-page-title">
+      Quase<br><em>lá.</em>
+    </h1>
+    <p class="checkout-subtitle">Preencha os dados abaixo para concluir sua compra com segurança.</p>
+
+    <!-- Steps -->
+    <div class="checkout-steps" aria-label="Etapas do checkout">
+      <div class="step active" id="step1Indicator">
+        <div class="step-num">1</div>
+        <span>Dados</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" id="step2Indicator">
+        <div class="step-num">2</div>
+        <span>Entrega</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" id="step3Indicator">
+        <div class="step-num">3</div>
+        <span>Pagamento</span>
+      </div>
+    </div>
+
+    <!-- STEP 1: Dados pessoais -->
+    <div class="form-section active" id="step1">
+      <div class="form-section-header">
+        <div class="form-section-num">1</div>
+        <div class="form-section-title">Dados Pessoais</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">Nome *</label>
+          <input type="text" id="firstName" placeholder="Seu nome" autocomplete="given-name">
+          <span class="field-error" id="firstNameError">Campo obrigatório</span>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Sobrenome *</label>
+          <input type="text" id="lastName" placeholder="Seu sobrenome" autocomplete="family-name">
+          <span class="field-error" id="lastNameError">Campo obrigatório</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="email">E-mail *</label>
+        <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+        <span class="field-error" id="emailError">E-mail inválido</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phone">Telefone</label>
+          <input type="tel" id="phone" placeholder="(11) 99999-0000" autocomplete="tel"
+                 oninput="maskPhone(this)">
+        </div>
+        <div class="form-group">
+          <label for="cpf">CPF</label>
+          <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14"
+                 oninput="maskCPF(this)">
+        </div>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-next" onclick="goToStep(2)">
+          Continuar para entrega
+          <svg width="16" height="10" viewBox="0 0 20 12" fill="none" aria-hidden="true">
+            <path d="M0 6h18M13 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Entrega -->
+    <div class="form-section" id="step2">
+      <div class="form-section-header">
+        <div class="form-section-num">2</div>
+        <div class="form-section-title">Endereço de Entrega</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="cep">CEP *</label>
+          <input type="text" id="cep" placeholder="00000-000" maxlength="9"
+                 oninput="maskCEP(this)" onblur="lookupCEP(this.value)">
+          <span class="field-error" id="cepError">CEP inválido</span>
+        </div>
+        <div class="form-group" style="align-self:flex-end">
+          <a href="https://buscacepinter.correios.com.br/" target="_blank" rel="noopener"
+             style="font-size:11px;letter-spacing:0.15em;color:var(--gold);text-transform:uppercase">
+            Não sei meu CEP
+          </a>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="grid-column:span 1">
+          <label for="address">Rua / Avenida *</label>
+          <input type="text" id="address" placeholder="Rua das Flores" autocomplete="street-address">
+          <span class="field-error" id="addressError">Campo obrigatório</span>
+        </div>
+        <div class="form-group">
+          <label for="addressNum">Número *</label>
+          <input type="text" id="addressNum" placeholder="123">
+          <span class="field-error" id="addressNumError">Campo obrigatório</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="complement">Complemento</label>
+          <input type="text" id="complement" placeholder="Apto 42, Bloco B">
+        </div>
+        <div class="form-group">
+          <label for="neighborhood">Bairro</label>
+          <input type="text" id="neighborhood" placeholder="Centro">
+        </div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="form-group">
+          <label for="city">Cidade *</label>
+          <input type="text" id="city" placeholder="São Paulo" autocomplete="address-level2">
+          <span class="field-error" id="cityError">Campo obrigatório</span>
+        </div>
+        <div class="form-group">
+          <label for="state">Estado *</label>
+          <input type="text" id="state" placeholder="SP" maxlength="2" autocomplete="address-level1"
+                 oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div class="form-group">
+          <label for="country">País</label>
+          <input type="text" id="country" value="Brasil" readonly
+                 style="opacity:0.6;cursor:default">
+        </div>
+      </div>
+
+      <!-- Shipping options -->
+      <div style="margin-top:8px;margin-bottom:4px">
+        <div class="form-section-title" style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--warm-gray)">Frete</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;margin-top:16px">
+        <label style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--gold);cursor:none;background:var(--gold-pale)">
+          <input type="radio" name="shipping" value="free" checked style="accent-color:var(--gold)">
+          <div>
+            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase">Frete Grátis</div>
+            <div style="font-size:12px;color:var(--warm-gray);margin-top:3px">5–8 dias úteis · Seguro incluso</div>
+          </div>
+          <div style="margin-left:auto;font-family:var(--font-display);font-size:18px;color:var(--gold)">Grátis</div>
+        </label>
+        <label style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--bone);cursor:none">
+          <input type="radio" name="shipping" value="express" style="accent-color:var(--gold)">
+          <div>
+            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase">Expresso</div>
+            <div style="font-size:12px;color:var(--warm-gray);margin-top:3px">2–3 dias úteis · Seguro incluso</div>
+          </div>
+          <div style="margin-left:auto;font-family:var(--font-display);font-size:18px">R$ 39</div>
+        </label>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-prev" onclick="goToStep(1)">← Voltar</button>
+        <button class="btn-next" onclick="goToStep(3)">
+          Continuar para pagamento
+          <svg width="16" height="10" viewBox="0 0 20 12" fill="none" aria-hidden="true">
+            <path d="M0 6h18M13 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Pagamento -->
+    <div class="form-section" id="step3">
+      <div class="form-section-header">
+        <div class="form-section-num">3</div>
+        <div class="form-section-title">Pagamento Seguro</div>
+      </div>
+
+      <div class="payment-methods">
+        <span class="pm-badge">Visa</span>
+        <span class="pm-badge">Mastercard</span>
+        <span class="pm-badge">Elo</span>
+        <span class="pm-badge">Amex</span>
+        <span class="pm-badge">Pix</span>
+      </div>
+
+      <div class="form-group">
+        <label>Dados do Cartão *</label>
+        <div id="card-element"></div>
+        <span class="card-error" id="cardError"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="cardName">Nome no Cartão *</label>
+        <input type="text" id="cardName" placeholder="Como está no cartão"
+               autocomplete="cc-name">
+        <span class="field-error" id="cardNameError">Campo obrigatório</span>
+      </div>
+
+      <div class="form-group">
+        <label for="installments">Parcelamento</label>
+        <select id="installments">
+          <option value="1">À vista</option>
+          <option value="2">2× sem juros</option>
+          <option value="3">3× sem juros</option>
+          <option value="6">6× sem juros</option>
+          <option value="12" selected>12× sem juros</option>
+        </select>
+      </div>
+
+      <!-- Resumo antes de pagar -->
+      <div style="background:var(--bone);padding:20px;margin-bottom:4px">
+        <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--warm-gray);margin-bottom:12px">Resumo do pedido</div>
+        <div id="paymentSummaryLines"></div>
+      </div>
+
+      <button class="pay-btn" id="payBtn" onclick="handlePayment()">
+        <svg width="16" height="20" viewBox="0 0 16 20" fill="none" aria-hidden="true">
+          <path d="M13 8V6a5 5 0 0 0-10 0v2M2 8h12l1 11H1L2 8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="payBtnText">Pagar com segurança</span>
+        <span class="spinner" id="paySpinner"></span>
+      </button>
+
+      <div class="pay-security">
+        <svg width="12" height="14" viewBox="0 0 16 20" fill="none" aria-hidden="true">
+          <path d="M8 1L1 4v6c0 5.25 3.25 8.74 7 9.93C11.75 18.74 15 15.25 15 10V4L8 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Pagamento criptografado · SSL 256-bit · Stripe
+      </div>
+
+      <div class="form-nav" style="margin-top:16px">
+        <button class="btn-prev" onclick="goToStep(2)">← Voltar para entrega</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── ORDER SUMMARY SIDE ─────────────────────────────── -->
+  <aside class="checkout-summary" aria-label="Resumo do pedido">
+    <div class="summary-title">Seu Pedido</div>
+
+    <div class="summary-items" id="summaryItems">
+      <div style="font-size:12px;color:var(--warm-gray);letter-spacing:0.1em">Carregando…</div>
+    </div>
+
+    <div class="summary-line">
+      <span>Subtotal</span>
+      <span id="summarySubtotal">R$ 0</span>
+    </div>
+    <div class="summary-line">
+      <span>Frete</span>
+      <span style="color:var(--gold)" id="summaryShipping">Grátis</span>
+    </div>
+    <div class="summary-line total">
+      <span class="label">Total</span>
+      <span class="val" id="summaryTotal">R$ 0</span>
+    </div>
+
+    <div class="summary-promo" style="margin-top:20px">
+      <input class="promo-input" type="text" placeholder="Código promocional"
+             id="promoInput" aria-label="Código promocional">
+      <button class="promo-btn" onclick="applyPromo()">Aplicar</button>
+    </div>
+  </aside>
+
+</main>
+
+<!-- Footer -->
+<div id="footer-mount"></div>
+
+<!-- Scripts -->
+<script src="../js/services/CartService.js"></script>
+<script src="../js/services/ProductService.js"></script>
+<script src="../js/services/StripeService.js"></script>
+<script src="../js/components/Header.js"></script>
+<script src="../js/main.js"></script>
+
+<script>
+  /* ── Redirecionamento se carrinho vazio ─────────────── */
+  if (CartService.getCount() === 0) {
+    document.getElementById('checkoutPage').innerHTML = `
+      <div class="empty-cart-warning" style="grid-column:span 2">
+        <h2>Carrinho Vazio</h2>
+        <p style="font-size:13px;color:var(--warm-gray);margin-bottom:24px">
+          Adicione peças à sua seleção antes de finalizar.
+        </p>
+        <a href="colecoes.html">← Ver coleção</a>
+      </div>`;
+  }
+
+  /* ── Render resumo lateral ──────────────────────────── */
+  function renderSummary() {
+    const items    = CartService.getItems();
+    const total    = CartService.getTotal();
+    const shipping = document.querySelector('input[name="shipping"]:checked')?.value;
+    const extra    = shipping === 'express' ? 39 : 0;
+
+    document.getElementById('summaryItems').innerHTML = items.map(item => `
+      <div class="summary-item">
+        <img class="summary-item-img" src="${item.img}" alt="${item.name}" loading="lazy">
+        <div>
+          <div class="summary-item-cat">${item.cat}</div>
+          <div class="summary-item-name">${item.name}</div>
+          <div class="summary-item-qty">Qtd: ${item.qty}</div>
+        </div>
+        <div class="summary-item-price">${CartService.formatCurrency(item.price * item.qty)}</div>
+      </div>`).join('');
+
+    document.getElementById('summarySubtotal').textContent = CartService.formatCurrency(total);
+    document.getElementById('summaryShipping').textContent = extra > 0 ? CartService.formatCurrency(extra) : 'Grátis';
+    document.getElementById('summaryTotal').textContent    = CartService.formatCurrency(total + extra);
+
+    // Atualiza resumo dentro do step 3
+    const lines = document.getElementById('paymentSummaryLines');
+    if (lines) {
+      lines.innerHTML = items.map(i => `
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--charcoal)">
+          <span>${i.name} × ${i.qty}</span>
+          <span>${CartService.formatCurrency(i.price * i.qty)}</span>
+        </div>`).join('') + `
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:10px 0 0;border-top:1px solid rgba(0,0,0,0.1);margin-top:6px">
+          <span style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase">Total</span>
+          <span style="font-family:var(--font-display);font-size:22px">${CartService.formatCurrency(total + extra)}</span>
+        </div>`;
+    }
+  }
+
+  renderSummary();
+  document.querySelectorAll('input[name="shipping"]').forEach(r =>
+    r.addEventListener('change', renderSummary));
+
+  /* ── Navegação entre steps ──────────────────────────── */
+  let _currentStep = 1;
+
+  function goToStep(step) {
+    if (step > _currentStep && !validateStep(_currentStep)) return;
+
+    // Esconde step atual
+    document.getElementById(`step${_currentStep}`).classList.remove('active');
+    _currentStep = step;
+    document.getElementById(`step${_currentStep}`).classList.add('active');
+
+    // Atualiza indicadores
+    [1, 2, 3].forEach(n => {
+      const el = document.getElementById(`step${n}Indicator`);
+      el.classList.remove('active', 'done');
+      if (n < step) el.classList.add('done');
+      if (n === step) el.classList.add('active');
+    });
+
+    // Inicializa Stripe ao entrar no step 3
+    if (step === 3) {
+      setTimeout(() => StripeService.init('#card-element'), 100);
+      renderSummary();
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ── Validação por step ─────────────────────────────── */
+  function validateStep(step) {
+    let valid = true;
+
+    const required = {
+      1: [
+        { id: 'firstName', errId: 'firstNameError', test: v => v.trim().length > 1 },
+        { id: 'lastName',  errId: 'lastNameError',  test: v => v.trim().length > 1 },
+        { id: 'email',     errId: 'emailError',      test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+      ],
+      2: [
+        { id: 'cep',        errId: 'cepError',        test: v => v.replace(/\D/g,'').length === 8 },
+        { id: 'address',    errId: 'addressError',    test: v => v.trim().length > 2 },
+        { id: 'addressNum', errId: 'addressNumError', test: v => v.trim().length > 0 },
+        { id: 'city',       errId: 'cityError',       test: v => v.trim().length > 1 },
+      ],
+    };
+
+    (required[step] || []).forEach(({ id, errId, test }) => {
+      const input = document.getElementById(id);
+      const err   = document.getElementById(errId);
+      const ok    = test(input?.value || '');
+      input?.classList.toggle('error', !ok);
+      err?.classList.toggle('visible', !ok);
+      if (!ok) valid = false;
+    });
+
+    return valid;
+  }
+
+  /* ── Processamento do pagamento ─────────────────────── */
+  async function handlePayment() {
+    if (!validateStep(3) && !document.getElementById('cardName').value.trim()) {
+      const err = document.getElementById('cardNameError');
+      err.classList.add('visible');
+      return;
+    }
+
+    const btn     = document.getElementById('payBtn');
+    const btnText = document.getElementById('payBtnText');
+    const spinner = document.getElementById('paySpinner');
+
+    btn.disabled = true;
+    btnText.textContent = 'Processando…';
+    spinner.classList.add('visible');
+
+    const shipping = document.querySelector('input[name="shipping"]:checked')?.value;
+    const extra    = shipping === 'express' ? 39 : 0;
+
+    const result = await StripeService.processPayment({
+      total: CartService.getTotal() + extra,
+      customer: {
+        firstName: document.getElementById('firstName').value,
+        lastName:  document.getElementById('lastName').value,
+        email:     document.getElementById('email').value,
+        phone:     document.getElementById('phone').value,
+      },
+      shipping: {
+        address:      document.getElementById('address').value,
+        number:       document.getElementById('addressNum').value,
+        complement:   document.getElementById('complement').value,
+        neighborhood: document.getElementById('neighborhood').value,
+        city:         document.getElementById('city').value,
+        state:        document.getElementById('state').value,
+        cep:          document.getElementById('cep').value,
+      },
+    });
+
+    btn.disabled = false;
+    btnText.textContent = 'Pagar com segurança';
+    spinner.classList.remove('visible');
+
+    if (result.success) {
+      // Salva ID do pedido para a tela de sucesso
+      sessionStorage.setItem('lumyra_order_id', result.orderId);
+      sessionStorage.setItem('lumyra_order_email', document.getElementById('email').value);
+      CartService.clear();
+      Router.go('sucesso.html');
+    } else {
+      const errEl = document.getElementById('cardError');
+      errEl.textContent = result.error || 'Pagamento recusado. Verifique os dados do cartão.';
+      errEl.classList.add('visible');
+    }
+  }
+
+  /* ── Máscaras de input ──────────────────────────────── */
+  function maskPhone(input) {
+    let v = input.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+    else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+    input.value = v;
+  }
+
+  function maskCPF(input) {
+    let v = input.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 9) v = `${v.slice(0,3)}.${v.slice(3,6)}.${v.slice(6,9)}-${v.slice(9)}`;
+    else if (v.length > 6) v = `${v.slice(0,3)}.${v.slice(3,6)}.${v.slice(6)}`;
+    else if (v.length > 3) v = `${v.slice(0,3)}.${v.slice(3)}`;
+    input.value = v;
+  }
+
+  function maskCEP(input) {
+    let v = input.value.replace(/\D/g, '').slice(0, 8);
+    if (v.length > 5) v = `${v.slice(0,5)}-${v.slice(5)}`;
+    input.value = v;
+  }
+
+  /* ── Consulta CEP (ViaCEP) ──────────────────────────── */
+  async function lookupCEP(value) {
+    const cep = value.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    try {
+      const res  = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (data.erro) return;
+      document.getElementById('address').value      = data.logradouro || '';
+      document.getElementById('neighborhood').value = data.bairro     || '';
+      document.getElementById('city').value         = data.localidade || '';
+      document.getElementById('state').value        = data.uf         || '';
+    } catch {
+      // Falha silenciosa — usuário preenche manualmente
+    }
+  }
+
+  /* ── Cupom promocional (placeholder) ───────────────── */
+  function applyPromo() {
+    const code = document.getElementById('promoInput').value.trim().toUpperCase();
+    if (code === 'LUMYRA10') {
+      Toast.show('Desconto de 10% aplicado!');
+    } else {
+      Toast.show('Código inválido ou expirado.');
+    }
+  }
+</script>
+
+</body>
+</html>

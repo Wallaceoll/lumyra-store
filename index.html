@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumyra — Joias que Resistem ao Tempo</title>
+  <meta name="description" content="Joias, alianças e relógios premium. Feitos para quem sabe o que quer. São Paulo, Brasil.">
+  <link rel="stylesheet" href="assets/css/lumyra.css">
+  <script src="https://js.stripe.com/v3/" async></script>
+
+  <style>
+    /* ── HERO ─────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-left {
+      display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding: 140px 64px 80px;
+      position: relative; z-index: 2;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(64px, 8vw, 110px);
+      font-weight: 300; line-height: 0.92;
+      letter-spacing: -0.02em;
+      margin-bottom: 40px;
+    }
+    .hero-title em { font-style: italic; color: var(--gold); }
+    .hero-sub {
+      font-size: 13px; line-height: 1.8;
+      color: var(--warm-gray); max-width: 380px;
+      margin-bottom: 56px;
+    }
+    .hero-right { position: relative; overflow: hidden; }
+    .hero-right img {
+      width: 100%; height: 100%; object-fit: cover;
+      transform: scale(1.05);
+      transition: transform 8s ease;
+    }
+    .hero-right:hover img { transform: scale(1.0); }
+    .hero-right::before {
+      content: ''; position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(135deg, var(--cream) 0%, transparent 45%);
+    }
+
+    /* ── PHILOSOPHY ───────────────────────────────────────── */
+    .philosophy {
+      padding: 140px 64px;
+      display: grid; grid-template-columns: auto 1fr;
+      gap: 80px; align-items: center;
+      max-width: 1400px; margin: 0 auto;
+    }
+    .phil-label {
+      font-size: 10px; letter-spacing: 0.35em;
+      text-transform: uppercase; color: var(--gold);
+      writing-mode: vertical-lr; transform: rotate(180deg);
+    }
+    .phil-content h2 {
+      font-family: var(--font-display);
+      font-size: clamp(40px, 5vw, 72px);
+      font-weight: 300; line-height: 1.1; margin-bottom: 32px;
+    }
+    .phil-content h2 em { font-style: italic; color: var(--gold); }
+    .phil-content p {
+      font-size: 15px; line-height: 1.9;
+      color: var(--warm-gray); max-width: 600px;
+    }
+
+    /* ── PRODUCTS GRID ────────────────────────────────────── */
+    .products-section { padding: 40px 0 120px; }
+    .section-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-end; padding: 0 64px 64px;
+      border-bottom: 1px solid var(--bone);
+    }
+    .view-all {
+      font-size: 11px; letter-spacing: 0.25em;
+      text-transform: uppercase; color: var(--warm-gray);
+      border-bottom: 1px solid var(--bone);
+      padding-bottom: 4px;
+      transition: color var(--transition-fast), border-color var(--transition-fast);
+    }
+    .view-all:hover { color: var(--gold); border-color: var(--gold); }
+
+    .products-grid {
+      display: grid; grid-template-columns: repeat(12, 1fr);
+    }
+    .product-card {
+      position: relative; overflow: hidden; cursor: none;
+      border-right: 1px solid var(--bone);
+      border-bottom: 1px solid var(--bone);
+    }
+    .product-card:first-child { grid-column: span 5; grid-row: span 2; border-left: 1px solid var(--bone); }
+    .product-card:nth-child(2) { grid-column: span 4; }
+    .product-card:nth-child(3) { grid-column: span 3; }
+    .product-card:nth-child(4) { grid-column: span 4; }
+    .product-card:nth-child(5) { grid-column: span 3; }
+
+    .product-img-wrap { overflow: hidden; height: 400px; background: var(--bone); }
+    .product-card:first-child .product-img-wrap { height: 100%; min-height: 600px; }
+    .product-img-wrap img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.5s;
+      filter: grayscale(8%);
+    }
+    .product-card:hover .product-img-wrap img { transform: scale(1.06); filter: grayscale(0%); }
+
+    .product-info {
+      padding: 28px 32px; background: var(--cream);
+      display: flex; justify-content: space-between; align-items: flex-end;
+    }
+    .product-cat  { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+    .product-name { font-family: var(--font-display); font-size: 20px; line-height: 1.2; }
+    .product-detail { font-size: 12px; color: var(--warm-gray); margin-top: 4px; }
+    .product-price { font-family: var(--font-display); font-size: 22px; color: var(--charcoal); text-align: right; }
+
+    .add-to-cart {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: var(--ink); color: var(--cream);
+      border: none; padding: 14px;
+      font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+      cursor: none;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), background 0.3s;
+    }
+    .product-card:hover .add-to-cart { transform: translateY(0); }
+    .add-to-cart:hover { background: var(--gold); }
+
+    /* ── EDITORIAL ────────────────────────────────────────── */
+    .editorial-strip {
+      display: grid; grid-template-columns: 1fr 1fr;
+      min-height: 70vh; border-top: 1px solid var(--bone);
+    }
+    .editorial-dark {
+      background: var(--ink); padding: 80px 64px;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .editorial-dark h2 {
+      font-family: var(--font-display);
+      font-size: clamp(48px, 5vw, 80px);
+      font-weight: 300; color: var(--cream); line-height: 1.0;
+    }
+    .editorial-dark h2 em { color: var(--gold-light); font-style: italic; }
+    .editorial-detail { font-size: 12px; letter-spacing: 0.12em; color: rgba(255,255,255,0.4); line-height: 2.1; max-width: 340px; }
+    .editorial-img { position: relative; overflow: hidden; }
+    .editorial-img img { width: 100%; height: 100%; object-fit: cover; }
+    .editorial-img .overlay-text {
+      position: absolute; bottom: 40px; right: 40px;
+      font-family: var(--font-display); font-size: 11px;
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--cream); writing-mode: vertical-lr;
+    }
+
+    /* ── RESPONSIVE ───────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .hero { grid-template-columns: 1fr; min-height: 80vh; }
+      .hero-right { height: 50vh; }
+      .hero-left { padding: 120px 32px 60px; }
+      .philosophy { padding: 80px 32px; grid-template-columns: 1fr; }
+      .phil-label { writing-mode: horizontal-tb; transform: none; }
+      .section-header { padding: 0 32px 40px; }
+      .products-grid { grid-template-columns: 1fr 1fr; }
+      .product-card:first-child,
+      .product-card:nth-child(2),
+      .product-card:nth-child(3),
+      .product-card:nth-child(4),
+      .product-card:nth-child(5) { grid-column: span 1; grid-row: span 1; }
+      .product-card:first-child .product-img-wrap { min-height: 400px; }
+      .editorial-strip { grid-template-columns: 1fr; }
+      .editorial-img { height: 400px; }
+      .editorial-dark { padding: 60px 32px; }
+    }
+    @media (max-width: 640px) {
+      .hero-left { padding: 100px 24px 50px; }
+      .section-header { padding: 0 24px 32px; flex-direction: column; align-items: flex-start; gap: 16px; }
+      .products-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── HERO ─────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="eyebrow" style="margin-bottom:24px">Coleção 2025</div>
+    <h1 class="hero-title">Feito<br>para<br><em>durar</em></h1>
+    <p class="hero-sub">
+      Cada peça nasce de um processo artesanal rigoroso.
+      Metal fundido. Pedra escolhida. Um objeto que atravessa
+      gerações sem pedir licença.
+    </p>
+    <a href="pages/colecoes.html" class="btn-primary">
+      Ver a coleção
+      <svg width="20" height="12" viewBox="0 0 20 12" fill="none" aria-hidden="true">
+        <path d="M0 6h18M13 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+  <div class="hero-right">
+    <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031337946/Ku9v2CQVjwUTZMhFkTPMBV/lumyra-collection-showcase-3wp3wMcAZLdT9EHku89cK7.webp"
+         alt="Coleção Lumyra — Joias Premium" loading="eager">
+  </div>
+</section>
+
+<!-- ─── MARQUEE ───────────────────────────────────────────── -->
+<div class="marquee-section" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">Ouro 18k<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Diamantes Certificados<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Artesanato Brasileiro<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Peças Exclusivas<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Entrega Segura<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Garantia Vitalícia<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Ouro 18k<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Diamantes Certificados<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Artesanato Brasileiro<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Peças Exclusivas<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Entrega Segura<span class="marquee-dot"></span></span>
+    <span class="marquee-item">Garantia Vitalícia<span class="marquee-dot"></span></span>
+  </div>
+</div>
+
+<!-- ─── PHILOSOPHY ────────────────────────────────────────── -->
+<section class="philosophy reveal" id="sobre">
+  <div class="phil-label">Filosofia</div>
+  <div class="phil-content">
+    <h2>
+      Não fabricamos<br><em>ornamentos.</em><br>
+      Criamos objetos<br>que significam.
+    </h2>
+    <p>
+      Uma joia não existe para ser exibida. Existe para marcar —
+      o momento, a pessoa, a decisão. Cada peça Lumyra passa por
+      mãos que sabem o que estão fazendo há décadas.
+      O material é honesto. A forma é intencional.
+    </p>
+  </div>
+</section>
+
+<!-- ─── PRODUTOS ──────────────────────────────────────────── -->
+<section class="products-section" id="novas-pecas">
+  <div class="section-header reveal">
+    <div>
+      <div class="section-label">Coleção Atual</div>
+      <h2 class="section-title">Peças Selecionadas</h2>
+    </div>
+    <a href="pages/colecoes.html" class="view-all">Ver todas</a>
+  </div>
+
+  <!-- Grid preenchido pelo JS via ProductService -->
+  <div class="products-grid" id="productsGrid" role="list" aria-label="Produtos em destaque">
+    <!-- Skeleton loading -->
+    <div style="grid-column:span 12;padding:80px;text-align:center;color:var(--warm-gray);font-size:12px;letter-spacing:0.2em;text-transform:uppercase">
+      Carregando coleção…
+    </div>
+  </div>
+</section>
+
+<!-- ─── EDITORIAL ─────────────────────────────────────────── -->
+<section class="editorial-strip" id="editorial">
+  <div class="editorial-dark reveal">
+    <h2>Material<br>que<br><em>resiste</em><br>ao tempo</h2>
+    <div class="editorial-detail">
+      Ouro 18 quilates. Diamantes certificados GIA e HRD.<br>
+      Pedras selecionadas individualmente. Cada elemento<br>
+      é escolhido com a mesma seriedade com que você<br>
+      tomou a decisão de comprar esta peça.
+    </div>
+  </div>
+  <div class="editorial-img">
+    <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031337946/Ku9v2CQVjwUTZMhFkTPMBV/lumyra-luxury-watch-N5ZzyWP3yVD6yprUmX7VQU.webp"
+         alt="Detalhe artesanal Lumyra" loading="lazy">
+    <div class="overlay-text" aria-hidden="true">São Paulo · Brasil · Desde 1997</div>
+  </div>
+</section>
+
+<!-- ─── FOOTER (injetado pelo Footer.js) ──────────────────── -->
+<div id="footer-mount"></div>
+
+<!-- ─── SCRIPTS ───────────────────────────────────────────── -->
+<!-- Ordem: Services → Components → Main -->
+<script src="js/services/CartService.js"></script>
+<script src="js/services/ProductService.js"></script>
+<script src="js/services/StripeService.js"></script>
+<script src="js/components/Header.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+  /* ── Renderiza grid de produtos via ProductService ────── */
+  (async function renderHomeProducts() {
+    const grid = document.getElementById('productsGrid');
+    try {
+      const products = await ProductService.fetchFeatured(5);
+
+      grid.innerHTML = products.map((p, i) => `
+        <article class="product-card reveal${i > 0 ? ' reveal-delay-' + Math.min(i, 3) : ''}"
+                 role="listitem" data-hover>
+          <a href="pages/produto.html?id=${p.id}" aria-label="Ver ${p.name}">
+            <div class="product-img-wrap">
+              <img src="${p.img}" alt="${p.name}" loading="${i === 0 ? 'eager' : 'lazy'}">
+            </div>
+            <div class="product-info">
+              <div>
+                <div class="product-cat">${p.catLabel}</div>
+                <div class="product-name">${p.name}</div>
+                <div class="product-detail">${p.detail}</div>
+              </div>
+              <div class="product-price">${CartService.formatCurrency(p.price)}</div>
+            </div>
+          </a>
+          <button class="add-to-cart"
+                  onclick="event.preventDefault();
+                           CartService.add({id:'${p.id}',name:'${p.name}',price:${p.price},cat:'${p.catLabel}',img:'${p.img}'});
+                           Toast.show('${p.name} adicionado');"
+                  aria-label="Adicionar ${p.name} ao carrinho">
+            Adicionar ao carrinho
+          </button>
+        </article>
+      `).join('');
+
+      // Re-observa novos elementos para animação de reveal
+      document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+        if (!el._observed) {
+          el._observed = true;
+          new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+          }, { threshold: 0.1 }).observe(el);
+        }
+      });
+
+    } catch (err) {
+      grid.innerHTML = `<div style="grid-column:span 12;padding:80px;text-align:center;color:var(--error)">Erro ao carregar produtos.</div>`;
+      console.error('[Home] renderHomeProducts:', err);
+    }
+  })();
+</script>
+
+</body>
+</html>
