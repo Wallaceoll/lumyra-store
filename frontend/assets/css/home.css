@@ -9,6 +9,26 @@
 .hero-right:hover img { transform: scale(1.0); }
 .hero-right::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, var(--cream) 0%, transparent 45%); }
 
+@media (min-width: 1025px) {
+  .hero { 
+    display: flex; 
+    align-items: center; 
+    background: linear-gradient(90deg, var(--cream) 0%, #F5F0E6 40%, var(--cream) 100%);
+  }
+  .hero-left { flex: 0 0 50%; justify-content: center; padding-left: 15%; padding-bottom: 80px; z-index: 10; }
+  .hero-right { position: absolute; top: 0; right: 0; bottom: 0; width: 85%; z-index: 1; }
+  .hero-right::before { 
+    background: linear-gradient(to right, var(--cream) 5%, rgba(249, 246, 240, 0.4) 15%, transparent 70%); 
+    transition: background 0.5s ease;
+  }
+  body.dark-mode .hero { background: linear-gradient(90deg, #0E0D0B 0%, #1A1815 40%, #0E0D0B 100%); }
+  body.dark-mode .hero-right::before { 
+    background: linear-gradient(to right, #0E0D0B 5%, rgba(14, 13, 11, 0.4) 15%, transparent 70%); 
+  }
+  .hero-sub { color: #333333; max-width: 480px; }
+  body.dark-mode .hero-sub { color: #C8C2B8; }
+}
+
 .philosophy { padding: 140px 64px; display: grid; grid-template-columns: auto 1fr; gap: 80px; align-items: center; max-width: 1400px; margin: 0 auto; }
 .phil-label { font-size: 14px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); writing-mode: vertical-lr; transform: rotate(180deg); }
 .phil-content h2 { font-family: var(--font-display); font-size: clamp(40px, 5vw, 72px); font-weight: 300; line-height: 1.1; margin-bottom: 32px; }
@@ -34,7 +54,15 @@
 @media (max-width: 1024px) {
   .hero { grid-template-columns: 1fr; min-height: 80vh; }
   .hero-right { height: 50vh; }
-  .hero-left { padding: 120px 32px 60px; }
+  .hero-left { 
+    padding: 120px 32px 60px; 
+    align-items: center; 
+    text-align: center; 
+  }
+  .hero-left .eyebrow { justify-content: center; width: 100%; }
+  .hero-sub { color: #333333; margin-left: auto; margin-right: auto; }
+  body.dark-mode .hero-sub { color: #C8C2B8; }
+  
   .philosophy { padding: 80px 32px; grid-template-columns: 1fr; }
   .phil-label { writing-mode: horizontal-tb; transform: none; }
   .editorial-strip { grid-template-columns: 1fr; }
