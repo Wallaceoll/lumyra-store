@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Guia de Presentes — Lumyra</title>
   <meta name="description" content="Encontre o presente perfeito. Sugestões curadas para momentos inesquecíveis.">
-  <link rel="stylesheet" href="../assets/css/lumyra.css">
+  <link rel="stylesheet" href="../assets/css/shared.css">
+  <link rel="stylesheet" href="../assets/css/catalog.css">
 </head>
 <body>
 
@@ -26,10 +27,10 @@
 <!-- ─── FILTER BAR ──────────────────────────────────────────── -->
 <div class="filter-bar">
   <div class="sub-filters" id="subFilters">
-    <a href="presentes.html" class="sub-filter-btn active">Todos</a>
-    <a href="presentes.html?preco=ate-1000" class="sub-filter-btn">Até R$ 1.000</a>
-    <a href="presentes.html?preco=1000-5000" class="sub-filter-btn">R$ 1.000 - R$ 5.000</a>
-    <a href="presentes.html?preco=acima-5000" class="sub-filter-btn">Acima de R$ 5.000</a>
+    <button class="sub-filter-btn active" data-filter="todos">Todos</button>
+    <button class="sub-filter-btn" data-filter="ate-3000">Até R$ 3.000</button>
+    <button class="sub-filter-btn" data-filter="3000-10000">R$ 3.000 - R$ 10.000</button>
+    <button class="sub-filter-btn" data-filter="acima-10000">Acima de R$ 10.000</button>
   </div>
 
   <div class="filter-sort">
@@ -51,20 +52,30 @@
 <script src="../js/services/CartService.js"></script>
 <script src="../js/main.js"></script>
 <script src="../js/components/Header.js"></script>
-<script src="../js/components/Footer.js"></script>
+
 
 <script>
   (async function initPresentes() {
-    const params = Router.getParams();
     let _allProducts = [];
-    let _activePrice = params.preco || null;
+    let _activePrice = null;
     let _sortOrder = 'default';
 
     try {
       const all = await ProductService.fetchAll();
-      // Presentes são todas as joias e alianças
-      _allProducts = all.filter(p => p.cat === 'joias' || p.cat === 'aliancas');
+      _allProducts = all.filter(p => p.cat === 'presentes' || p.featured);
       renderCatalog();
+
+      // Filter buttons
+      document.querySelectorAll('.sub-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.sub-filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.dataset.filter;
+          _activePrice = (filter === 'todos') ? null : filter;
+          renderCatalog();
+        });
+      });
+
       document.getElementById('sortSelect').addEventListener('change', (e) => {
         _sortOrder = e.target.value;
         renderCatalog();
@@ -74,9 +85,9 @@
     function renderCatalog() {
       let products = [..._allProducts];
       if (_activePrice) {
-        if (_activePrice === 'ate-1000') products = products.filter(p => p.price <= 1000);
-        else if (_activePrice === '1000-5000') products = products.filter(p => p.price > 1000 && p.price <= 5000);
-        else if (_activePrice === 'acima-5000') products = products.filter(p => p.price > 5000);
+        if (_activePrice === 'ate-3000') products = products.filter(p => p.price <= 3000);
+        else if (_activePrice === '3000-10000') products = products.filter(p => p.price > 3000 && p.price <= 10000);
+        else if (_activePrice === 'acima-10000') products = products.filter(p => p.price > 10000);
       }
       if (_sortOrder === 'price-asc') products.sort((a, b) => a.price - b.price);
       if (_sortOrder === 'price-desc') products.sort((a, b) => b.price - a.price);
@@ -86,26 +97,44 @@
       grid.innerHTML = products.map(p => {
         const off = p.oldPrice ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
         return `
-          <div class="catalog-card reveal">
-            <a href="produto.html?id=${p.id}" class="catalog-img-wrap">
-              ${p.isSet ? '<span class="badge-set">Conjunto</span>' : ''}
-              ${off > 0 ? `<span class="badge-off">-${off}%</span>` : ''}
-              <img src="${p.image || p.img}" alt="${p.name}">
-            </a>
-            <div class="catalog-info">
-              <div class="catalog-cat">${p.catLabel}</div>
-              <h3 class="catalog-name">${p.name}</h3>
-              <div class="catalog-footer">
-                <div class="catalog-price-wrap">
-                  ${p.oldPrice ? `<span class="price-old">R$ ${p.oldPrice.toLocaleString('pt-BR')}</span>` : ''}
-                  <span class="catalog-price">R$ ${p.price.toLocaleString('pt-BR')}</span>
-                </div>
-                <button class="btn-add" onclick="CartService.addToCart(${p.id})">Comprar</button>
+          <article class="product-card reveal" data-hover>
+            <a href="produto.html?id=${p.id}" aria-label="Ver ${p.name}">
+              <div class="product-img-wrap">
+                <span class="badge-set" style="background: var(--gold); color: white;">Sugestão</span>
+                ${off > 0 ? `<span class="badge-off">-${off}%</span>` : ''}
+                <img src="${p.img}" alt="${p.name}" loading="lazy">
               </div>
+              <div class="product-info">
+                <div>
+                  <div class="product-cat">${p.type || p.catLabel}</div>
+                  <div class="product-name">${p.name}</div>
+                  <div class="product-detail">${p.detail || p.description.substring(0, 60) + '...'}</div>
+                </div>
+                <div class="product-price">
+                   ${p.oldPrice ? `<span style="text-decoration:line-through;font-size:14px;color:var(--warm-gray);display:block">R$ ${p.oldPrice.toLocaleString('pt-BR')}</span>` : ''}
+                   ${CartService.formatCurrency(p.price)}
+                </div>
+              </div>
+            </a>
+            <div class="product-actions" style="display: flex; gap: 8px; padding: 0 20px 20px;">
+              <a href="produto.html?id=${p.id}" class="btn-outline" style="flex: 1; padding: 12px; font-size: 11px; text-align: center;">Detalhes</a>
+              <button class="btn-primary" style="flex: 1; padding: 12px; font-size: 11px;"
+                      onclick="event.preventDefault();
+                               CartService.add({id:'${p.id}',name:'${p.name}',price:${p.price},cat:'${p.catLabel}',img:'${p.img}'});
+                               Toast.show('${p.name} adicionado');">
+                + Carrinho
+              </button>
             </div>
-          </div>
+          </article>
         `;
       }).join('');
+
+      // Re-observa para animações reveal
+      grid.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+        new IntersectionObserver(entries => {
+          entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.08 }).observe(el);
+      });
     }
   })();
 </script>

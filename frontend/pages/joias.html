@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Joias Exclusivas — Lumyra</title>
   <meta name="description" content="Anéis, brincos, colares e pulseiras em ouro 18k. A essência da joalheria artesanal Lumyra.">
-  <link rel="stylesheet" href="../assets/css/lumyra.css">
+  <link rel="stylesheet" href="../assets/css/shared.css">
+  <link rel="stylesheet" href="../assets/css/catalog.css">
 </head>
 <body>
 
@@ -26,12 +27,10 @@
 <!-- ─── FILTER BAR ──────────────────────────────────────────── -->
 <div class="filter-bar">
   <div class="sub-filters" id="subFilters">
-    <a href="joias.html" class="sub-filter-btn active">Todas</a>
-    <a href="joias.html?cat=aneis" class="sub-filter-btn">Anéis</a>
-    <a href="joias.html?cat=brincos" class="sub-filter-btn">Brincos</a>
-    <a href="joias.html?cat=colares" class="sub-filter-btn">Colares</a>
-    <a href="joias.html?filter=conjunto" class="sub-filter-btn" style="border-color: var(--gold); color: var(--gold)">Conjuntos</a>
-    <a href="joias.html?filter=oferta" class="sub-filter-btn">Ofertas</a>
+    <button class="sub-filter-btn active" data-filter="todas">Todas</button>
+    <button class="sub-filter-btn" data-filter="aneis">Anéis</button>
+    <button class="sub-filter-btn" data-filter="brincos">Brincos</button>
+    <button class="sub-filter-btn" data-filter="colares">Colares</button>
   </div>
 
   <div class="filter-sort">
@@ -53,19 +52,30 @@
 <script src="../js/services/CartService.js"></script>
 <script src="../js/main.js"></script>
 <script src="../js/components/Header.js"></script>
-<script src="../js/components/Footer.js"></script>
+
 
 <script>
   (async function initJoias() {
-    const params = Router.getParams();
     let _allProducts = [];
-    let _activeSub = params.cat || null;
+    let _activeSub = null;
     let _sortOrder = 'default';
 
     try {
       const all = await ProductService.fetchAll();
       _allProducts = all.filter(p => p.cat === 'joias');
       renderCatalog();
+
+      // Filter buttons
+      document.querySelectorAll('.sub-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.sub-filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.dataset.filter;
+          _activeSub = (filter === 'todas') ? null : filter;
+          renderCatalog();
+        });
+      });
+
       document.getElementById('sortSelect').addEventListener('change', (e) => {
         _sortOrder = e.target.value;
         renderCatalog();
@@ -74,14 +84,11 @@
 
     function renderCatalog() {
       let products = [..._allProducts];
-      const f = params.filter;
 
       if (_activeSub) {
-        products = products.filter(p => p.name.toLowerCase().includes(_activeSub.slice(0, -1)));
+        products = products.filter(p => p.subCat === _activeSub);
       }
-      
-      if (f === 'conjunto') products = products.filter(p => p.isSet);
-      if (f === 'oferta')   products = products.filter(p => p.oldPrice);
+
       if (_sortOrder === 'price-asc') products.sort((a, b) => a.price - b.price);
       if (_sortOrder === 'price-desc') products.sort((a, b) => b.price - a.price);
 
@@ -99,9 +106,9 @@
               </div>
               <div class="product-info">
                 <div>
-                  <div class="product-cat">${p.catLabel}</div>
+                  <div class="product-cat">${p.type || p.catLabel}</div>
                   <div class="product-name">${p.name}</div>
-                  <div class="product-detail">${p.detail || p.description.substring(0, 40) + '...'}</div>
+                  <div class="product-detail">${p.detail || p.description.substring(0, 60) + '...'}</div>
                 </div>
                 <div class="product-price">
                    ${p.oldPrice ? `<span style="text-decoration:line-through;font-size:14px;color:var(--warm-gray);display:block">R$ ${p.oldPrice.toLocaleString('pt-BR')}</span>` : ''}
@@ -109,15 +116,25 @@
                 </div>
               </div>
             </a>
-            <button class="add-to-cart"
-                    onclick="event.preventDefault();
-                             CartService.add({id:'${p.id}',name:'${p.name}',price:${p.price},cat:'${p.catLabel}',img:'${p.img}'});
-                             Toast.show('${p.name} adicionado');">
-              Adicionar ao carrinho
-            </button>
+            <div class="product-actions" style="display: flex; gap: 8px; padding: 0 20px 20px;">
+              <a href="produto.html?id=${p.id}" class="btn-outline" style="flex: 1; padding: 12px; font-size: 11px; text-align: center;">Detalhes</a>
+              <button class="btn-primary" style="flex: 1; padding: 12px; font-size: 11px;"
+                      onclick="event.preventDefault();
+                               CartService.add({id:'${p.id}',name:'${p.name}',price:${p.price},cat:'${p.catLabel}',img:'${p.img}'});
+                               Toast.show('${p.name} adicionado');">
+                + Carrinho
+              </button>
+            </div>
           </article>
         `;
       }).join('');
+
+      // Re-observa para animações reveal
+      grid.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+        new IntersectionObserver(entries => {
+          entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.08 }).observe(el);
+      });
     }
   })();
 </script>

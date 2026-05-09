@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Alianças de Casamento e Noivado — Lumyra</title>
   <meta name="description" content="Descubra a coleção de alianças Lumyra. Símbolos de amor e eternidade em ouro 18k e diamantes.">
-  <link rel="stylesheet" href="../assets/css/lumyra.css">
+  <link rel="stylesheet" href="../assets/css/shared.css">
+  <link rel="stylesheet" href="../assets/css/catalog.css">
 </head>
 <body>
 
@@ -26,10 +27,9 @@
 <!-- ─── FILTER BAR ──────────────────────────────────────────── -->
 <div class="filter-bar">
   <div class="sub-filters" id="subFilters">
-    <a href="aliancas.html" class="sub-filter-btn active">Todas</a>
-    <a href="aliancas.html?estilo=tradicional" class="sub-filter-btn">Tradicionais</a>
-    <a href="aliancas.html?estilo=moderna" class="sub-filter-btn">Modernas</a>
-    <a href="aliancas.html?estilo=cravejada" class="sub-filter-btn">Cravejadas</a>
+    <button class="sub-filter-btn active" data-filter="todas">Todas</button>
+    <button class="sub-filter-btn" data-filter="casamento">Casamento</button>
+    <button class="sub-filter-btn" data-filter="noivado">Noivado</button>
   </div>
 
   <div class="filter-sort">
@@ -56,20 +56,29 @@
 <script src="../js/services/CartService.js"></script>
 <script src="../js/main.js"></script>
 <script src="../js/components/Header.js"></script>
-<script src="../js/components/Footer.js"></script>
+
 
 <script>
   (async function initAliancas() {
-    const params = Router.getParams();
     let _allProducts = [];
-    let _activeSub = params.estilo || null;
+    let _activeSub = null;
     let _sortOrder = 'default';
 
     try {
       const all = await ProductService.fetchAll();
       _allProducts = all.filter(p => p.cat === 'aliancas');
-      
       renderCatalog();
+
+      // Filter buttons
+      document.querySelectorAll('.sub-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.sub-filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.dataset.filter;
+          _activeSub = (filter === 'todas') ? null : filter;
+          renderCatalog();
+        });
+      });
 
       document.getElementById('sortSelect').addEventListener('change', (e) => {
         _sortOrder = e.target.value;
@@ -85,8 +94,7 @@
 
       if (_activeSub) {
         products = products.filter(p => 
-          p.name.toLowerCase().includes(_activeSub) || 
-          p.description.toLowerCase().includes(_activeSub)
+          p.catLabel.toLowerCase().includes(_activeSub)
         );
       }
 
@@ -113,9 +121,9 @@
               </div>
               <div class="product-info">
                 <div>
-                  <div class="product-cat">${p.catLabel}</div>
+                  <div class="product-cat">${p.type || p.catLabel}</div>
                   <div class="product-name">${p.name}</div>
-                  <div class="product-detail">${p.detail || p.description?.substring(0, 40) + '...'}</div>
+                  <div class="product-detail">${p.detail || p.description?.substring(0, 60) + '...'}</div>
                 </div>
                 <div class="product-price">
                    ${p.oldPrice ? `<span style="text-decoration:line-through;font-size:14px;color:var(--warm-gray);display:block">R$ ${p.oldPrice.toLocaleString('pt-BR')}</span>` : ''}
@@ -123,15 +131,25 @@
                 </div>
               </div>
             </a>
-            <button class="add-to-cart"
-                    onclick="event.preventDefault();
-                             CartService.add({id:'${p.id}',name:'${p.name}',price:${p.price},cat:'${p.catLabel}',img:'${p.img}'});
-                             Toast.show('${p.name} adicionado');">
-              Adicionar ao carrinho
-            </button>
+            <div class="product-actions" style="display: flex; gap: 8px; padding: 0 20px 20px;">
+              <a href="produto.html?id=${p.id}" class="btn-outline" style="flex: 1; padding: 12px; font-size: 11px; text-align: center;">Detalhes</a>
+              <button class="btn-primary" style="flex: 1; padding: 12px; font-size: 11px;"
+                      onclick="event.preventDefault();
+                               CartService.add({id:'${p.id}',name:'${p.name}',price:${p.price},cat:'${p.catLabel}',img:'${p.img}'});
+                               Toast.show('${p.name} adicionado');">
+                + Carrinho
+              </button>
+            </div>
           </article>
         `;
       }).join('');
+
+      // Re-observa para animações reveal
+      grid.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+        new IntersectionObserver(entries => {
+          entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.08 }).observe(el);
+      });
     }
   })();
 </script>
