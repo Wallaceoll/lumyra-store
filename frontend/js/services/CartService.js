@@ -1,17 +1,3 @@
-/**
- * CartService.js — Gerenciador de Carrinho
- * ─────────────────────────────────────────────────────────────
- * Responsabilidade única: gerenciar o estado do carrinho.
- * Persiste no localStorage para sobreviver à navegação entre páginas.
- *
- * Padrão Observer: componentes se registram com onChange()
- * e são notificados automaticamente a cada mutação.
- *
- * Integração futura com Spring Boot:
- *   Substitua _loadFromStorage() / _persist() por chamadas
- *   ao seu CartController REST (GET /api/cart, POST /api/cart/items).
- * ─────────────────────────────────────────────────────────────
- */
 
 class CartService {
 
@@ -24,8 +10,7 @@ class CartService {
   // Cache em memória dos itens
   static #items = CartService._loadFromStorage();
 
-  /* ── LEITURA ──────────────────────────────────────────────── */
-
+  
   /** Retorna cópia imutável dos itens */
   static getItems() {
     return [...CartService.#items];
@@ -51,8 +36,7 @@ class CartService {
     return CartService.#items.find(i => i.id === productId) ?? null;
   }
 
-  /* ── MUTAÇÃO ──────────────────────────────────────────────── */
-
+  
   /**
    * Adiciona um produto ao carrinho.
    * Se já existir, incrementa a quantidade.
@@ -106,8 +90,7 @@ class CartService {
     CartService._commit();
   }
 
-  /* ── OBSERVER PATTERN ─────────────────────────────────────── */
-
+  
   /**
    * Registra um callback chamado sempre que o carrinho mudar.
    * O callback recebe o total de itens (count) como argumento.
@@ -123,8 +106,7 @@ class CartService {
     CartService.#listeners = CartService.#listeners.filter(l => l !== callback);
   }
 
-  /* ── UTILITÁRIOS ──────────────────────────────────────────── */
-
+  
   /**
    * Formata um valor numérico como moeda brasileira.
    * @param {number} value
@@ -148,8 +130,7 @@ class CartService {
     };
   }
 
-  /* ── PRIVADOS ─────────────────────────────────────────────── */
-
+  
   /** Persiste e notifica todos os observers */
   static _commit() {
     CartService._persist();

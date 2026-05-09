@@ -1,21 +1,3 @@
-/**
- * StripeService.js — Integração de Pagamento
- * ─────────────────────────────────────────────────────────────
- * Responsabilidade única: orquestrar o fluxo de pagamento com Stripe.
- *
- * Fluxo de produção com Spring Boot:
- *  1. Frontend chama StripeService.createPaymentIntent(total)
- *  2. StripeService faz POST /api/payments/create-intent no Spring Boot
- *  3. Spring Boot cria o PaymentIntent na API Stripe e retorna { clientSecret }
- *  4. StripeService confirma o pagamento no frontend via stripe.confirmCardPayment()
- *  5. Stripe notifica o backend via webhook para registrar o pedido
- *
- * Hoje: fluxo simulado. Para ir a produção:
- *   - Substitua PUBLISHABLE_KEY pela chave real (pk_live_...)
- *   - Implemente o endpoint POST /api/payments/create-intent no Spring Boot
- *   - Descomente o bloco "PRODUÇÃO" abaixo
- * ─────────────────────────────────────────────────────────────
- */
 
 class StripeService {
 
@@ -30,8 +12,7 @@ class StripeService {
   static #cardElement  = null;
   static #initialized  = false;
 
-  /* ── INICIALIZAÇÃO ────────────────────────────────────────── */
-
+  
   /**
    * Monta o campo de cartão do Stripe num elemento DOM.
    * Chame uma vez ao abrir o modal de checkout.
@@ -85,8 +66,7 @@ class StripeService {
     }
   }
 
-  /* ── FLUXO DE PAGAMENTO ───────────────────────────────────── */
-
+  
   /**
    * Processa o pagamento completo.
    *
@@ -140,8 +120,7 @@ class StripeService {
     }
   }
 
-  /* ── CRIAÇÃO DO PAYMENT INTENT ────────────────────────────── */
-
+  
   /**
    * Solicita o clientSecret ao backend.
    *
@@ -178,8 +157,7 @@ class StripeService {
     ── ─────────────────────────────────────────────────────── */
   }
 
-  /* ── HELPERS PRIVADOS ─────────────────────────────────────── */
-
+  
   /** Salva pedido no localStorage (apenas em modo simulado) */
   static _saveOrderLocally(order) {
     const orders = JSON.parse(localStorage.getItem('lumyra_orders') || '[]');

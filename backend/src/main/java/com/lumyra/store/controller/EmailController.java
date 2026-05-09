@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Permite chamadas do frontend
+@CrossOrigin(origins = "*")
 public class EmailController {
 
     @Autowired

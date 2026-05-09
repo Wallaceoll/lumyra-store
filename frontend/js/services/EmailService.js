@@ -1,9 +1,3 @@
-/**
- * EmailService.js — Integrador com Backend Spring Boot
- * ─────────────────────────────────────────────────────────────
- * Responsabilidade única: disparar chamadas para a API de e-mail.
- * ─────────────────────────────────────────────────────────────
- */
 
 class EmailService {
 
@@ -34,8 +28,7 @@ class EmailService {
 
     } catch (err) {
       console.error('[EmailService] Falha ao enviar e-mail:', err);
-      // Fallback: Mesmo que o e-mail falhe, não bloqueamos o usuário.
-      // Em produção, você pode querer logar isso num serviço de erro (Sentry, etc.)
+      // Fallback
       return { success: false, error: err.message };
     }
   }

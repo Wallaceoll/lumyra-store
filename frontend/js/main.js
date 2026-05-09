@@ -1,15 +1,4 @@
-/**
- * main.js — Inicialização Global Lumyra
- * ─────────────────────────────────────────────────────────────
- * Ponto de entrada do sistema. Carregado em todas as páginas.
- * Responsável por:
- *   1. Expor utilitários globais (Toast, Router)
- *   2. Registrar atalhos de teclado (ex: ESC fecha o carrinho)
- *   3. Nenhuma lógica de negócio — isso fica nos Services
- * ─────────────────────────────────────────────────────────────
- */
 
-/* ── TOAST GLOBAL ─────────────────────────────────────────── */
 const Toast = {
   _timer: null,
 
@@ -23,7 +12,6 @@ const Toast = {
   },
 };
 
-/* ── ROUTER SIMPLES ───────────────────────────────────────── */
 const Router = {
   /**
    * Detecta a página atual com base no pathname.
@@ -49,15 +37,12 @@ const Router = {
   },
 };
 
-/* ── ATALHOS DE TECLADO ───────────────────────────────────── */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') Header.closeCart();
 });
 
-/* ── DISPONIBILIZA GLOBALMENTE ────────────────────────────── */
 window.LumyraApp = { Toast, Router, CartService, ProductService, StripeService };
 
-/* ── LOG DE DESENVOLVIMENTO ───────────────────────────────── */
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   console.info('%c Lumyra Store %c DEV MODE', 'background:#B8963E;color:#0E0D0B;padding:4px 8px;font-weight:700', 'background:#0E0D0B;color:#D4AF70;padding:4px 8px;');
   console.info('LumyraApp disponível no console:', window.LumyraApp);

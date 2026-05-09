@@ -1,32 +1,14 @@
-/**
- * ProductService.js — Catálogo de Produtos
- * ─────────────────────────────────────────────────────────────
- * Responsabilidade única: fornecer dados dos produtos.
- *
- * Hoje: dados em memória (sem backend).
- * Amanhã: troque o método _getMockData() por um fetch real:
- *
- *   static async fetchAll() {
- *     const res = await fetch('/api/products');       // Spring Boot
- *     return res.json();
- *   }
- *
- * Nenhuma outra parte do sistema precisa mudar.
- * ─────────────────────────────────────────────────────────────
- */
 
 class ProductService {
 
-  /* ── CATEGORIAS DISPONÍVEIS ───────────────────────────────── */
-  static CATEGORIES = {
+    static CATEGORIES = {
     ALL:      'todas',
     JOIAS:    'joias',
     ALIANCAS: 'aliancas',
     RELOGIOS: 'relogios',
   };
 
-  /* ── CATÁLOGO INTERNO ─────────────────────────────────────── */
-
+  
   /** Retorna todos os produtos (Promise para simular assincronicidade) */
   static async fetchAll() {
     // Simula latência de rede — remova ao conectar ao backend real
@@ -55,8 +37,7 @@ class ProductService {
     return all.filter(p => p.featured).slice(0, limit);
   }
 
-  /* ── DADOS MOCK ───────────────────────────────────────────── */
-
+  
   static _getMockData() {
     return [
       {
@@ -201,8 +182,7 @@ class ProductService {
     ];
   }
 
-  /* ── HELPER PRIVADO ───────────────────────────────────────── */
-
+  
   static _simulateDelay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }

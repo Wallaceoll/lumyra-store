@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Produto — Lumyra</title>
+  <meta name="description" content="Conheça os detalhes desta peça exclusiva Lumyra. Alta joalheria com certificado de autenticidade.">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="product">
+  <meta property="og:title" content="Produto — Lumyra">
+  <meta property="og:description" content="Alta joalheria com design contemporâneo e metais nobres.">
+  <meta property="og:image" content="">
+
   <link rel="stylesheet" href="../assets/css/lumyra.css">
   <script src="https://js.stripe.com/v3/" async></script>
 
@@ -80,6 +88,8 @@
       renderRelated(_product);
       document.title = `${_product.name} — Lumyra`;
       document.getElementById('breadcrumbName').textContent = _product.name;
+      updateMetaTags(_product);
+      injectJSONLD(_product);
     } catch (err) {
       document.getElementById('productLayout').innerHTML =
         `<div style="grid-column:span 2;padding:80px;text-align:center">
@@ -201,6 +211,43 @@
     // Setup functions after render
     setupZoom();
     updateStickyBar(p);
+  }
+
+  /* ── SEO: Atualiza Meta Tags Dinamicamente ─────────── */
+  function updateMetaTags(p) {
+    const desc = `${p.name} - ${p.detail}. ${p.description.substring(0, 100)}...`;
+    document.querySelector('meta[name="description"]').setAttribute('content', desc);
+    document.querySelector('meta[property="og:title"]').setAttribute('content', `${p.name} — Lumyra`);
+    document.querySelector('meta[property="og:description"]').setAttribute('content', desc);
+    document.querySelector('meta[property="og:image"]').setAttribute('content', p.img);
+  }
+
+  /* ── SEO: Injeta Dados Estruturados (JSON-LD) ──────── */
+  function injectJSONLD(p) {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    const json = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": p.name,
+      "image": [p.img],
+      "description": p.description,
+      "sku": p.id,
+      "brand": {
+        "@type": "Brand",
+        "name": "Lumyra"
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": window.location.href,
+        "priceCurrency": "BRL",
+        "price": p.price,
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition"
+      }
+    };
+    script.text = JSON.stringify(json);
+    document.head.appendChild(script);
   }
 
   /* ── Galeria: troca imagem principal ─────────────────── */

@@ -1,13 +1,3 @@
-/**
- * Header.js — Componente Universal Lumyra
- * ─────────────────────────────────────────────────────────────
- * Injeta o header e o cart drawer em TODAS as telas.
- * Importado via <script src="/js/components/Header.js"> no final
- * do <body> de cada página HTML.
- *
- * Dependências: CartService (carregado antes deste arquivo)
- * ─────────────────────────────────────────────────────────────
- */
 
 class Header {
 
@@ -40,8 +30,7 @@ class Header {
     Header.updateCartBadge(CartService.getCount());
   }
 
-  /* ── INJEÇÃO DE ELEMENTOS ────────────────────────────────── */
-
+  
   static _injectCursor() {
     if (document.getElementById('lumyra-cursor')) return;
     const el = document.createElement('div');
@@ -89,7 +78,6 @@ class Header {
 
     document.body.prepend(nav);
 
-    // ── Eventos do header ──
     document.getElementById('navCartBtn').addEventListener('click', Header.toggleCart);
     document.getElementById('navMenuBtn').addEventListener('click', Header._toggleMobileMenu);
     document.getElementById('themeToggle').addEventListener('click', Header._toggleTheme);
@@ -155,8 +143,7 @@ class Header {
     document.body.appendChild(el);
   }
 
-  /* ── CARRINHO: RENDER ─────────────────────────────────────── */
-
+  
   static _renderCartItems() {
     const container = document.getElementById('cartItems');
     const footer    = document.getElementById('cartFooter');
@@ -208,8 +195,7 @@ class Header {
     });
   }
 
-  /* ── BADGE DO CARRINHO ────────────────────────────────────── */
-
+  
   static updateCartBadge(count) {
     const badge = document.getElementById('cartBadge');
     if (!badge) return;
@@ -217,8 +203,7 @@ class Header {
     badge.classList.toggle('visible', count > 0);
   }
 
-  /* ── TOGGLE CART DRAWER ───────────────────────────────────── */
-
+  
   static toggleCart() {
     document.getElementById('cartOverlay')?.classList.toggle('open');
     document.getElementById('cartDrawer')?.classList.toggle('open');
@@ -229,8 +214,7 @@ class Header {
     document.getElementById('cartDrawer')?.classList.remove('open');
   }
 
-  /* ── TEMAS ────────────────────────────────────────────────── */
-
+  
   static _toggleTheme() {
     const current = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
     const next    = current === 'dark' ? 'light' : 'dark';
@@ -251,8 +235,7 @@ class Header {
     }
   }
 
-  /* ── MENU MOBILE ──────────────────────────────────────────── */
-
+  
   static _toggleMobileMenu() {
     const links = document.getElementById('navLinks');
     const btn   = document.getElementById('navMenuBtn');
@@ -261,8 +244,7 @@ class Header {
     btn.setAttribute('aria-expanded', open);
   }
 
-  /* ── SCROLL BEHAVIOR ──────────────────────────────────────── */
-
+  
   static _bindScrollBehavior() {
     const nav = document.getElementById('lmr-nav');
     if (!nav) return;
@@ -271,8 +253,7 @@ class Header {
     onScroll(); // estado inicial
   }
 
-  /* ── CURSOR ───────────────────────────────────────────────── */
-
+  
   static _bindCursorBehavior() {
     const cursor = document.getElementById('lumyra-cursor');
     if (!cursor) return;
@@ -292,8 +273,7 @@ class Header {
     });
   }
 
-  /* ── REVEAL ON SCROLL ─────────────────────────────────────── */
-
+  
   static _setupRevealObserver() {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
@@ -302,8 +282,7 @@ class Header {
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   }
 
-  /* ── HELPERS ──────────────────────────────────────────────── */
-
+  
   /** Resolve path relativo dependendo da página atual */
   static _resolvePath(path) {
     if (path.startsWith('http')) return path;
@@ -425,7 +404,6 @@ class Header {
   }
 }
 
-/* ── CSS DO HEADER (injetado via JS para ser auto-contido) ─── */
 (function _injectHeaderStyles() {
   if (document.getElementById('lmr-header-styles')) return;
   const style = document.createElement('style');
@@ -535,7 +513,6 @@ class Header {
   document.head.appendChild(style);
 })();
 
-/* ── AUTO-INICIALIZAÇÃO ───────────────────────────────────── */
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => Header.init());
 } else {
