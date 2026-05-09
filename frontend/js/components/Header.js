@@ -320,8 +320,8 @@ class Header {
             <h4>Destaques</h4>
             <ul class="mega-list">
               <li><a href="${base}joias.html?filter=new">Novas Peças</a></li>
-              <li><a href="${base}joias.html?filter=conjunto" style="color: var(--gold); font-weight: 600;">Conjuntos Exclusivos</a></li>
-              <li><a href="${base}joias.html?filter=oferta" style="color: #c5a059;">Ofertas da Estação</a></li>
+              <li><a href="${base}joias.html?filter=conjunto">Conjuntos Exclusivos</a></li>
+              <li><a href="${base}joias.html?filter=oferta">Ofertas da Estação</a></li>
             </ul>
           </div>
         </div>`,
@@ -375,8 +375,8 @@ class Header {
             <h4>Estilo</h4>
             <ul class="mega-list">
               <li><a href="${base}relogios.html?estilo=social">Social</a></li>
-              <li><a href="${base}relogios.html?filter=conjunto" style="color: var(--gold); font-weight: 600;">Kit Relógio + Acessório</a></li>
-              <li><a href="${base}relogios.html?filter=oferta" style="color: #c5a059;">Promoções</a></li>
+              <li><a href="${base}relogios.html?filter=conjunto">Kit Relógio + Acessório</a></li>
+              <li><a href="${base}relogios.html?filter=oferta">Promoções</a></li>
             </ul>
           </div>
         </div>`,
