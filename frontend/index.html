@@ -141,12 +141,14 @@
     try {
       const products = await ProductService.fetchFeatured(5);
 
+      const fixImg = (src) => src.startsWith('../') ? src.replace('../', '') : src;
+
       grid.innerHTML = products.map((p, i) => `
         <article class="product-card reveal${i > 0 ? ' reveal-delay-' + Math.min(i, 3) : ''}"
                  role="listitem" data-hover>
           <a href="pages/produto.html?id=${p.id}" aria-label="Ver ${p.name}">
             <div class="product-img-wrap">
-              <img src="${p.img}" alt="${p.name}" loading="${i === 0 ? 'eager' : 'lazy'}">
+              <img src="${fixImg(p.img)}" alt="${p.name}" loading="${i === 0 ? 'eager' : 'lazy'}">
             </div>
             <div class="product-info">
               <div>
