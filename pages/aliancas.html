@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alianças de Casamento e Noivado — Lumyra</title>
+  <meta name="description" content="Descubra a coleção de alianças Lumyra. Símbolos de amor e eternidade em ouro 18k e diamantes.">
+  <link rel="stylesheet" href="../assets/css/lumyra.css">
+</head>
+<body>
+
+<!-- ─── PAGE HERO ──────────────────────────────────────────── -->
+<section class="page-hero">
+  <div>
+    <div class="eyebrow" style="margin-bottom:20px">Compromisso & Eternidade</div>
+    <h1>Alianças<br><em>Eternas</em></h1>
+  </div>
+  <div class="page-hero-meta">
+    <p>
+      Símbolos de uma promessa que resiste ao tempo. Peças moldadas à mão com o mais puro ouro 18k e diamantes certificados.
+    </p>
+    <div class="product-count">Exibindo <span id="countNum">...</span> alianças</div>
+  </div>
+</section>
+
+<!-- ─── FILTER BAR ──────────────────────────────────────────── -->
+<div class="filter-bar">
+  <div class="sub-filters" id="subFilters">
+    <a href="aliancas.html" class="sub-filter-btn active">Todas</a>
+    <a href="aliancas.html?estilo=tradicional" class="sub-filter-btn">Tradicionais</a>
+    <a href="aliancas.html?estilo=moderna" class="sub-filter-btn">Modernas</a>
+    <a href="aliancas.html?estilo=cravejada" class="sub-filter-btn">Cravejadas</a>
+  </div>
+
+  <div class="filter-sort">
+    <label for="sortSelect">Ordenar</label>
+    <select id="sortSelect">
+      <option value="default">Destaques</option>
+      <option value="price-asc">Menor preço</option>
+      <option value="price-desc">Maior preço</option>
+    </select>
+  </div>
+</div>
+
+<!-- ─── CATALOG GRID ────────────────────────────────────────── -->
+<section class="catalog-section">
+  <div class="catalog-grid" id="catalogGrid">
+    <!-- Skeletons -->
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-line"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-line"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-line"></div></div>
+  </div>
+</section>
+
+<script src="../js/services/ProductService.js"></script>
+<script src="../js/services/CartService.js"></script>
+<script src="../js/main.js"></script>
+<script src="../js/components/Header.js"></script>
+<script src="../js/components/Footer.js"></script>
+
+<script>
+  (async function initAliancas() {
+    const params = Router.getParams();
+    let _allProducts = [];
+    let _activeSub = params.estilo || null;
+    let _sortOrder = 'default';
+
+    try {
+      const all = await ProductService.fetchAll();
+      _allProducts = all.filter(p => p.cat === 'aliancas');
+      
+      renderCatalog();
+
+      document.getElementById('sortSelect').addEventListener('change', (e) => {
+        _sortOrder = e.target.value;
+        renderCatalog();
+      });
+
+    } catch (err) {
+      console.error(err);
+    }
+
+    function renderCatalog() {
+      let products = [..._allProducts];
+
+      if (_activeSub) {
+        products = products.filter(p => 
+          p.name.toLowerCase().includes(_activeSub) || 
+          p.description.toLowerCase().includes(_activeSub)
+        );
+      }
+
+      if (_sortOrder === 'price-asc') products.sort((a, b) => a.price - b.price);
+      if (_sortOrder === 'price-desc') products.sort((a, b) => b.price - a.price);
+
+      document.getElementById('countNum').textContent = products.length;
+      
+      const grid = document.getElementById('catalogGrid');
+      if (products.length === 0) {
+        grid.innerHTML = '<div class="catalog-empty">Nenhuma aliança encontrada com este filtro.</div>';
+        return;
+      }
+
+      grid.innerHTML = products.map(p => {
+        const off = p.oldPrice ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
+        return `
+          <article class="product-card reveal" data-hover>
+            <a href="produto.html?id=${p.id}" aria-label="Ver ${p.name}">
+              <div class="product-img-wrap">
+                ${p.isSet ? '<span class="badge-set">Conjunto</span>' : ''}
+                ${off > 0 ? `<span class="badge-off">-${off}%</span>` : ''}
+                <img src="${p.img}" alt="${p.name}" loading="lazy">
+              </div>
+              <div class="product-info">
+                <div>
+                  <div class="product-cat">${p.catLabel}</div>
+                  <div class="product-name">${p.name}</div>
+                  <div class="product-detail">${p.detail || p.description?.substring(0, 40) + '...'}</div>
+                </div>
+                <div class="product-price">
+                   ${p.oldPrice ? `<span style="text-decoration:line-through;font-size:14px;color:var(--warm-gray);display:block">R$ ${p.oldPrice.toLocaleString('pt-BR')}</span>` : ''}
+                   ${CartService.formatCurrency(p.price)}
+                </div>
+              </div>
+            </a>
+            <button class="add-to-cart"
+                    onclick="event.preventDefault();
+                             CartService.add({id:'${p.id}',name:'${p.name}',price:${p.price},cat:'${p.catLabel}',img:'${p.img}'});
+                             Toast.show('${p.name} adicionado');">
+              Adicionar ao carrinho
+            </button>
+          </article>
+        `;
+      }).join('');
+    }
+  })();
+</script>
+
+</body>
+</html>

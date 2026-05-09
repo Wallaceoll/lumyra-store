@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pedido Confirmado — Lumyra</title>
   <link rel="stylesheet" href="../assets/css/lumyra.css">
-
-
 </head>
 <body>
 
@@ -40,13 +38,39 @@
 
     <!-- Subtítulo -->
     <p class="success-sub" id="successSubtext">
-      Seu pedido foi recebido e está sendo preparado.<br>
-      Você receberá um e-mail de confirmação em breve<br>
-      com os detalhes e o código de rastreamento.
+      Seu pedido foi recebido e está sendo preparado.
     </p>
 
+    <!-- PIX SECTION (Dynamically Shown) -->
+    <div id="pixSection" style="display:none; margin: 40px auto; max-width: 400px; padding: 40px; border: 1px solid var(--bone); background: white; text-align: center; animation: fadeUp 0.6s ease 0.4s forwards; opacity: 0; transform: translateY(20px);">
+      <div style="font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px;">Pagar via PIX</div>
+      
+      <div class="qr-code-wrap" style="width: 200px; height: 200px; margin: 0 auto 24px; padding: 12px; border: 1px solid var(--bone); position: relative;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=176x176&data=00020126360014br.gov.bcb.pix0114lumyrastore015204000053039865802BR5915LumyraStore6009SaoPaulo62070503***6304" 
+             alt="QR Code PIX" style="width: 100%; height: 100%; filter: grayscale(100%);">
+        <div style="position: absolute; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; font-size: 11px; letter-spacing: 0.1em;" id="pixExpired">
+          EXPIRADO
+        </div>
+      </div>
+
+      <div style="font-size: 13px; color: var(--warm-gray); margin-bottom: 24px; line-height: 1.6;">
+        Aponte a câmera do seu banco para o código ou use o código abaixo:
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+        <input type="text" id="pixKey" readonly value="00020126360014br.gov.bcb.pix0114lumyrastore015204000053039865802BR5915LumyraStore6009SaoPaulo62070503***6304" 
+               style="flex: 1; padding: 12px; font-size: 12px; border: 1px solid var(--bone); background: var(--cream); outline: none;">
+        <button onclick="copyPixKey()" style="background: var(--ink); color: white; border: none; padding: 12px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; cursor: none;">Copiar</button>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 11px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase;">
+        <span class="spinner" style="width: 12px; height: 12px; border-width: 1px; display: inline-block;"></span>
+        Aguardando confirmação...
+      </div>
+    </div>
+
     <!-- Timeline de status -->
-    <div class="order-timeline" role="list" aria-label="Status do pedido">
+    <div class="order-timeline" id="orderTimeline" role="list" aria-label="Status do pedido">
       <div class="timeline-step done" role="listitem">
         <div class="timeline-dot">✓</div>
         <div class="timeline-label">Confirmado</div>
@@ -93,10 +117,8 @@
   </div>
 </main>
 
-<!-- Footer -->
 <div id="footer-mount"></div>
 
-<!-- Scripts -->
 <script src="../js/services/CartService.js"></script>
 <script src="../js/services/ProductService.js"></script>
 <script src="../js/services/StripeService.js"></script>
@@ -104,106 +126,96 @@
 <script src="../js/main.js"></script>
 
 <script>
-  /* ── Lê dados da sessão ─────────────────────────────── */
   const orderId    = sessionStorage.getItem('lumyra_order_id')    || `LMR-${Date.now()}`;
   const orderEmail = sessionStorage.getItem('lumyra_order_email') || 'seu e-mail';
+  const payMethod  = sessionStorage.getItem('lumyra_pay_method');
+  const orderTotal = sessionStorage.getItem('lumyra_order_total');
 
-  /* ── Exibe ID do pedido ─────────────────────────────── */
   document.getElementById('orderIdDisplay').textContent = `#${orderId}`;
 
-  /* ── Subtítulo personalizado ────────────────────────── */
-  document.getElementById('successSubtext').innerHTML = `
-    Seu pedido foi recebido e está sendo preparado.<br>
-    Você receberá a confirmação em <strong>${orderEmail}</strong><br>
-    com os detalhes e o código de rastreamento.
-  `;
+  if (payMethod === 'pix') {
+    document.getElementById('pixSection').style.display = 'block';
+    document.getElementById('successSubtext').innerHTML = `
+      Pedido aguardando pagamento via <strong>PIX</strong>.<br>
+      A reserva das suas peças será mantida por 30 minutos.<br>
+      <span style="color:var(--gold);font-size:12px;display:block;margin-top:10px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Enviamos os dados do PIX para <strong>${orderEmail}</strong>
+      </span>
+    `;
+    const labels = document.querySelectorAll('.timeline-label');
+    labels[0].textContent = 'Aguardando';
+    labels[1].textContent = 'Confirmado';
+  } else {
+    document.getElementById('successSubtext').innerHTML = `
+      Seu pedido foi recebido e está sendo preparado.<br>
+      Uma confirmação detalhada foi enviada para <strong>${orderEmail}</strong>.<br>
+      <span style="color:var(--gold);font-size:12px;display:block;margin-top:10px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        E-mail de confirmação enviado com sucesso.
+      </span>
+    `;
+  }
 
-  /* ── Detalhes do pedido ─────────────────────────────── */
+  function copyPixKey() {
+    const keyInput = document.getElementById('pixKey');
+    keyInput.select();
+    keyInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(keyInput.value);
+    if (window.LumyraApp && window.LumyraApp.Toast) {
+      window.LumyraApp.Toast.show('Código PIX copiado!');
+    }
+  }
+
   function renderOrderDetails() {
     const now      = new Date();
     const rows     = document.getElementById('orderDetailRows');
-
     const estimated = new Date(now);
     estimated.setDate(estimated.getDate() + 7);
-    const dateStr = estimated.toLocaleDateString('pt-BR', {
-      day: 'numeric', month: 'long', year: 'numeric'
-    });
+    const dateStr = estimated.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
 
     rows.innerHTML = `
-      <div class="detail-row">
-        <span class="key">Número do pedido</span>
-        <span>#${orderId}</span>
-      </div>
-      <div class="detail-row">
-        <span class="key">Data</span>
-        <span>${now.toLocaleDateString('pt-BR')}</span>
-      </div>
-      <div class="detail-row">
-        <span class="key">Entrega estimada</span>
-        <span>${dateStr}</span>
-      </div>
-      <div class="detail-row">
-        <span class="key">Confirmação enviada para</span>
-        <span>${orderEmail}</span>
-      </div>
-      <div class="detail-row">
-        <span class="key">Frete</span>
-        <span style="color:var(--gold)">Grátis</span>
-      </div>
+      <div class="detail-row"><span class="key">Número do pedido</span><span>#${orderId}</span></div>
+      <div class="detail-row"><span class="key">Pagamento</span><span style="text-transform:uppercase">${payMethod === 'pix' ? 'PIX (5% OFF)' : 'Cartão de Crédito'}</span></div>
+      <div class="detail-row"><span class="key">Valor Total</span><strong>${CartService.formatCurrency(parseFloat(orderTotal) || 0)}</strong></div>
+      <div class="detail-row"><span class="key">Data</span><span>${now.toLocaleDateString('pt-BR')}</span></div>
+      <div class="detail-row"><span class="key">Confirmação enviada para</span><span>${orderEmail}</span></div>
       <div class="detail-row" style="margin-top:8px;padding-top:12px;border-top:1px solid var(--bone)">
-        <span class="key">Status</span>
-        <span style="color:var(--gold);font-size:11px;letter-spacing:0.2em;text-transform:uppercase">
-          Em preparação
-        </span>
+        <span class="key">Status do Pedido</span>
+        <span style="color:var(--gold);font-size:11px;letter-spacing:0.2em;text-transform:uppercase">${payMethod === 'pix' ? 'Aguardando PIX' : 'Em preparação'}</span>
       </div>
     `;
   }
   renderOrderDetails();
 
-  /* ── Toggle detalhes ────────────────────────────────── */
   function toggleDetails() {
-    const body   = document.getElementById('detailsBody');
-    const icon   = document.getElementById('toggleIcon');
-    const toggle = document.querySelector('.order-details-toggle');
-    const open   = body.classList.toggle('open');
+    const body = document.getElementById('detailsBody');
+    const icon = document.getElementById('toggleIcon');
+    const open = body.classList.toggle('open');
     icon.classList.toggle('open', open);
-    toggle.setAttribute('aria-expanded', open);
   }
 
-  /* ── Confetti ───────────────────────────────────────── */
   (function spawnConfetti() {
     const container = document.getElementById('confettiContainer');
-    const colors    = ['#B8963E', '#D4AF70', '#F0E8D0', '#0E0D0B', '#8A8278'];
-    const count     = 40;
-
-    for (let i = 0; i < count; i++) {
+    if (!container) return;
+    const colors = ['#B8963E', '#D4AF70', '#F0E8D0', '#0E0D0B', '#8A8278'];
+    for (let i = 0; i < 40; i++) {
       const el = document.createElement('div');
       el.className = 'confetti-piece';
-
-      const size     = Math.random() * 8 + 4;
-      const isSquare = Math.random() > 0.5;
-
-      el.style.cssText = `
-        left: ${Math.random() * 100}%;
-        width: ${size}px;
-        height: ${size}px;
-        background: ${colors[Math.floor(Math.random() * colors.length)]};
-        border-radius: ${isSquare ? '0' : '50%'};
-        animation-duration: ${Math.random() * 2 + 2}s;
-        animation-delay: ${Math.random() * 1.5}s;
-      `;
-
+      const size = Math.random() * 8 + 4;
+      el.style.cssText = `left: ${Math.random() * 100}%; width: ${size}px; height: ${size}px; background: ${colors[Math.floor(Math.random() * colors.length)]}; border-radius: ${Math.random() > 0.5 ? '0' : '50%'}; animation-duration: ${Math.random() * 2 + 2}s; animation-delay: ${Math.random() * 1.5}s;`;
       container.appendChild(el);
     }
-
-    // Remove confetti após animação
     setTimeout(() => container.remove(), 5000);
   })();
 
-  /* ── Limpa sessionStorage após leitura ─────────────── */
-  sessionStorage.removeItem('lumyra_order_id');
-  sessionStorage.removeItem('lumyra_order_email');
+  // sessionStorage.removeItem('lumyra_order_id');
+  // sessionStorage.removeItem('lumyra_order_email');
+  // sessionStorage.removeItem('lumyra_pay_method');
+  // sessionStorage.removeItem('lumyra_order_total');
 </script>
+
+<div id="lumyra-toast" class="toast-notification" aria-live="polite"></div>
 
 </body>
 </html>

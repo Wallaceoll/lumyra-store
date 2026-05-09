@@ -15,8 +15,8 @@
 <!-- ─── PAGE HERO ──────────────────────────────────────────── -->
 <section class="page-hero">
   <div>
-    <div class="eyebrow" style="margin-bottom:20px">Lumyra — Catálogo</div>
-    <h1>Nossa<br><em>Coleção</em></h1>
+    <div class="eyebrow" id="pageEyebrow" style="margin-bottom:20px">Lumyra — Joias</div>
+    <h1 id="pageTitle">Nossa<br><em>Coleção</em></h1>
   </div>
   <div class="page-hero-meta">
     <p>
@@ -30,13 +30,11 @@
 </section>
 
 <!-- ─── FILTER BAR ──────────────────────────────────────────── -->
-<div class="filter-bar" role="navigation" aria-label="Filtros de categoria">
-  <ul class="filter-tabs" role="tablist">
-    <li class="filter-tab active" role="tab" data-cat="todas" tabindex="0">Todas</li>
-    <li class="filter-tab" role="tab" data-cat="joias"    tabindex="0">Joias</li>
-    <li class="filter-tab" role="tab" data-cat="aliancas" tabindex="0">Alianças</li>
-    <li class="filter-tab" role="tab" data-cat="relogios" tabindex="0">Relógios</li>
-  </ul>
+<div class="filter-bar">
+  <!-- Filtros de Subcategoria (Dinâmicos) -->
+  <div class="sub-filters" id="subFilters">
+    <!-- Injetado via JS -->
+  </div>
 
   <div class="filter-sort">
     <label for="sortSelect">Ordenar</label>
@@ -93,6 +91,15 @@
 
     try {
       _allProducts = await ProductService.fetchAll();
+      
+      // Mapeamento de filtros da URL
+      if (params.categoria) _activeCategory = params.categoria;
+      if (params.cat)       _activeCategory = 'joias';
+      if (params.preco)     _activeCategory = 'presentes';
+      if (params.linha)     _activeCategory = 'colecoes';
+
+      updatePageContext(_activeCategory, params);
+      renderSubFilters(_activeCategory, params);
       renderCatalog();
     } catch (err) {
       document.getElementById('catalogGrid').innerHTML =
@@ -109,6 +116,7 @@
         _activeCategory = tab.dataset.cat;
         document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
+        updatePageContext(_activeCategory);
         renderCatalog();
       });
       // Acessibilidade: Enter / Space ativa o tab
@@ -123,14 +131,92 @@
     });
   })();
 
+  /* ── SEO & Contexto ───────────────────────────────────── */
+  function updatePageContext(cat, params = {}) {
+    const titles = {
+      'todas':    { h1: 'Nossa<br><em>Coleção</em>', eyebrow: 'Lumyra — Catálogo', title: 'Coleções — Lumyra', desc: 'Explore a coleção completa de joias Lumyra.' },
+      'joias':    { h1: 'Joias<br><em>Exclusivas</em>', eyebrow: 'Joalheria Premium', title: 'Joias Premium — Lumyra', desc: 'Anéis, brincos e colares feitos à mão.' },
+      'aliancas': { h1: 'Alianças<br><em>Eternas</em>', eyebrow: 'Compromisso & Casamento', title: 'Alianças de Casamento e Noivado — Lumyra', desc: 'Símbolos de compromisso em ouro 18k e diamantes.' },
+      'relogios': { h1: 'Alta<br><em>Relojoaria</em>', eyebrow: 'Precisão e Luxo', title: 'Relógios de Luxo — Lumyra', desc: 'Peças de precisão para quem valoriza o tempo.' },
+      'presentes':{ h1: 'Guia de<br><em>Presentes</em>', eyebrow: 'Para Momentos Especiais', title: 'Sugestões de Presentes — Lumyra', desc: 'Encontre o presente perfeito para momentos inesquecíveis.' },
+    };
+
+    const ctx = titles[cat] || titles['todas'];
+    const h1 = document.getElementById('pageTitle');
+    const eye = document.getElementById('pageEyebrow');
+    if (h1) h1.innerHTML = ctx.h1;
+    if (eye) eye.textContent = ctx.eyebrow;
+    document.title = ctx.title;
+  }
+
+  function renderSubFilters(cat, params) {
+    const container = document.getElementById('subFilters');
+    if (!container) return;
+
+    let subcats = [];
+    if (cat === 'joias') subcats = ['Anéis', 'Brincos', 'Colares', 'Pulseiras'];
+    if (cat === 'aliancas') subcats = ['Ouro Amarelo', 'Ouro Branco', 'Diamantes'];
+    if (cat === 'relogios') subcats = ['Femininos', 'Masculinos', 'Automáticos'];
+    if (cat === 'presentes') subcats = ['Até R$ 1.000', 'R$ 1.000 - R$ 5.000', 'Acima de R$ 5.000'];
+
+    if (subcats.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = subcats.map(s => {
+      const active = (params.cat === s.toLowerCase() || params.estilo === s.toLowerCase() || params.preco?.includes(s.split(' ')[1])) ? 'active' : '';
+      // Link simplificado para subfiltro
+      let url = `colecoes.html?categoria=${cat}`;
+      if (cat === 'joias') url += `&cat=${s.toLowerCase()}`;
+      if (cat === 'aliancas') url += `&estilo=${s.toLowerCase()}`;
+      if (cat === 'relogios') url += `&genero=${s.toLowerCase()}`;
+      if (cat === 'presentes') {
+          if (s.includes('1.000')) url += `&preco=ate-1000`;
+          // ... mapear outros
+      }
+
+      return `<a href="${url}" class="sub-filter-btn ${active}">${s}</a>`;
+    }).join('');
+  }
+
   /* ── Render ───────────────────────────────────────────── */
   function renderCatalog() {
     const grid = document.getElementById('catalogGrid');
 
     // 1. Filtra
-    let products = _activeCategory === 'todas'
-      ? [..._allProducts]
-      : _allProducts.filter(p => p.cat === _activeCategory);
+    let products = [];
+    const params = Router.getParams();
+
+    // Filtro base por categoria principal
+    if (_activeCategory === 'todas') {
+      products = [..._allProducts];
+    } else {
+      products = _allProducts.filter(p => p.cat === _activeCategory);
+    }
+
+    // Filtros específicos do Mega Menu
+    if (params.cat) {
+      products = products.filter(p => p.name.toLowerCase().includes(params.cat.toLowerCase().slice(0, -1)));
+    }
+    if (params.estilo) {
+      products = products.filter(p => p.name.toLowerCase().includes(params.estilo.toLowerCase()) || p.description.toLowerCase().includes(params.estilo.toLowerCase()));
+    }
+    if (params.genero) {
+      products = products.filter(p => p.name.toLowerCase().includes(params.genero.toLowerCase()) || p.description.toLowerCase().includes(params.genero.toLowerCase()));
+    }
+    if (params.ocasiao) {
+      products = products.filter(p => p.name.toLowerCase().includes(params.ocasiao.toLowerCase()) || p.description.toLowerCase().includes(params.ocasiao.toLowerCase()));
+    }
+
+    if (params.preco) {
+      if (params.preco === 'ate-1000')   products = _allProducts.filter(p => p.price <= 1000);
+      else if (params.preco === '1000-5000') products = _allProducts.filter(p => p.price > 1000 && p.price <= 5000);
+      else if (params.preco === 'acima-5000') products = _allProducts.filter(p => p.price > 5000);
+    }
+
+    if (params.filter === 'new')  products = products.slice(0, 4); // Simula novidades
+    if (params.filter === 'best') products = products.filter(p => p.price > 2000); // Simula mais vendidos
 
     // 2. Ordena
     if (_sortOrder === 'price-asc')  products.sort((a, b) => a.price - b.price);

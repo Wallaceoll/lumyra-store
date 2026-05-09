@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guia de Presentes — Lumyra</title>
+  <meta name="description" content="Encontre o presente perfeito. Sugestões curadas para momentos inesquecíveis.">
+  <link rel="stylesheet" href="../assets/css/lumyra.css">
+</head>
+<body>
+
+<!-- ─── PAGE HERO ──────────────────────────────────────────── -->
+<section class="page-hero">
+  <div>
+    <div class="eyebrow" style="margin-bottom:20px">Para Momentos Especiais</div>
+    <h1>Guia de<br><em>Presentes</em></h1>
+  </div>
+  <div class="page-hero-meta">
+    <p>
+      Surpreenda quem você ama com uma joia que carrega significado. Filtre por faixa de preço e encontre a peça ideal.
+    </p>
+    <div class="product-count">Exibindo <span id="countNum">...</span> sugestões</div>
+  </div>
+</section>
+
+<!-- ─── FILTER BAR ──────────────────────────────────────────── -->
+<div class="filter-bar">
+  <div class="sub-filters" id="subFilters">
+    <a href="presentes.html" class="sub-filter-btn active">Todos</a>
+    <a href="presentes.html?preco=ate-1000" class="sub-filter-btn">Até R$ 1.000</a>
+    <a href="presentes.html?preco=1000-5000" class="sub-filter-btn">R$ 1.000 - R$ 5.000</a>
+    <a href="presentes.html?preco=acima-5000" class="sub-filter-btn">Acima de R$ 5.000</a>
+  </div>
+
+  <div class="filter-sort">
+    <label for="sortSelect">Ordenar</label>
+    <select id="sortSelect">
+      <option value="default">Destaques</option>
+      <option value="price-asc">Menor preço</option>
+      <option value="price-desc">Maior preço</option>
+    </select>
+  </div>
+</div>
+
+<!-- ─── CATALOG GRID ────────────────────────────────────────── -->
+<section class="catalog-section">
+  <div class="catalog-grid" id="catalogGrid"></div>
+</section>
+
+<script src="../js/services/ProductService.js"></script>
+<script src="../js/services/CartService.js"></script>
+<script src="../js/main.js"></script>
+<script src="../js/components/Header.js"></script>
+<script src="../js/components/Footer.js"></script>
+
+<script>
+  (async function initPresentes() {
+    const params = Router.getParams();
+    let _allProducts = [];
+    let _activePrice = params.preco || null;
+    let _sortOrder = 'default';
+
+    try {
+      const all = await ProductService.fetchAll();
+      // Presentes são todas as joias e alianças
+      _allProducts = all.filter(p => p.cat === 'joias' || p.cat === 'aliancas');
+      renderCatalog();
+      document.getElementById('sortSelect').addEventListener('change', (e) => {
+        _sortOrder = e.target.value;
+        renderCatalog();
+      });
+    } catch (err) { console.error(err); }
+
+    function renderCatalog() {
+      let products = [..._allProducts];
+      if (_activePrice) {
+        if (_activePrice === 'ate-1000') products = products.filter(p => p.price <= 1000);
+        else if (_activePrice === '1000-5000') products = products.filter(p => p.price > 1000 && p.price <= 5000);
+        else if (_activePrice === 'acima-5000') products = products.filter(p => p.price > 5000);
+      }
+      if (_sortOrder === 'price-asc') products.sort((a, b) => a.price - b.price);
+      if (_sortOrder === 'price-desc') products.sort((a, b) => b.price - a.price);
+
+      document.getElementById('countNum').textContent = products.length;
+      const grid = document.getElementById('catalogGrid');
+      grid.innerHTML = products.map(p => {
+        const off = p.oldPrice ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
+        return `
+          <div class="catalog-card reveal">
+            <a href="produto.html?id=${p.id}" class="catalog-img-wrap">
+              ${p.isSet ? '<span class="badge-set">Conjunto</span>' : ''}
+              ${off > 0 ? `<span class="badge-off">-${off}%</span>` : ''}
+              <img src="${p.image || p.img}" alt="${p.name}">
+            </a>
+            <div class="catalog-info">
+              <div class="catalog-cat">${p.catLabel}</div>
+              <h3 class="catalog-name">${p.name}</h3>
+              <div class="catalog-footer">
+                <div class="catalog-price-wrap">
+                  ${p.oldPrice ? `<span class="price-old">R$ ${p.oldPrice.toLocaleString('pt-BR')}</span>` : ''}
+                  <span class="catalog-price">R$ ${p.price.toLocaleString('pt-BR')}</span>
+                </div>
+                <button class="btn-add" onclick="CartService.addToCart(${p.id})">Comprar</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  })();
+</script>
+
+</body>
+</html>

@@ -6,6 +6,17 @@
   <title>Checkout — Lumyra</title>
   <link rel="stylesheet" href="../assets/css/lumyra.css">
   <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    .pay-method-btn {
+      background: var(--cream); border: 1px solid var(--bone);
+      padding: 16px; font-size: 11px; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--warm-gray);
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      transition: all 0.3s; cursor: none;
+    }
+    .pay-method-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-pale); }
+    .pay-method-btn svg { stroke-width: 1.5; }
+  </style>
 
 
 </head>
@@ -153,25 +164,13 @@
 
       <!-- Shipping options -->
       <div style="margin-top:8px;margin-bottom:4px">
-        <div class="form-section-title" style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--warm-gray)">Frete</div>
+        <div class="form-section-title" style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--warm-gray)">Método de Entrega</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;margin-top:16px">
-        <label style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--gold);cursor:none;background:var(--gold-pale)">
-          <input type="radio" name="shipping" value="free" checked style="accent-color:var(--gold)">
-          <div>
-            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase">Frete Grátis</div>
-            <div style="font-size:12px;color:var(--warm-gray);margin-top:3px">5–8 dias úteis · Seguro incluso</div>
-          </div>
-          <div style="margin-left:auto;font-family:var(--font-display);font-size:18px;color:var(--gold)">Grátis</div>
-        </label>
-        <label style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--bone);cursor:none">
-          <input type="radio" name="shipping" value="express" style="accent-color:var(--gold)">
-          <div>
-            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase">Expresso</div>
-            <div style="font-size:12px;color:var(--warm-gray);margin-top:3px">2–3 dias úteis · Seguro incluso</div>
-          </div>
-          <div style="margin-left:auto;font-family:var(--font-display);font-size:18px">R$ 39</div>
-        </label>
+      <div id="shippingOptions" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;margin-top:16px">
+        <!-- Injetado via JS com base no CEP e Valor -->
+        <div style="font-size:12px;color:var(--warm-gray);padding:20px;border:1px solid var(--bone);text-align:center">
+          Informe seu CEP para calcular o frete.
+        </div>
       </div>
 
       <div class="form-nav">
@@ -192,36 +191,55 @@
         <div class="form-section-title">Pagamento Seguro</div>
       </div>
 
-      <div class="payment-methods">
-        <span class="pm-badge">Visa</span>
-        <span class="pm-badge">Mastercard</span>
-        <span class="pm-badge">Elo</span>
-        <span class="pm-badge">Amex</span>
-        <span class="pm-badge">Pix</span>
+      <div class="payment-selector" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px">
+        <button type="button" class="pay-method-btn active" id="btnMethodCard" onclick="selectPaymentMethod('card')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Cartão
+        </button>
+        <button type="button" class="pay-method-btn" id="btnMethodPix" onclick="selectPaymentMethod('pix')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L3 12l9 10 9-10-9-10z M12 8l-4 4 4 4 4-4-4-4z"/></svg>
+          PIX
+        </button>
       </div>
 
-      <div class="form-group">
-        <label>Dados do Cartão *</label>
-        <div id="card-element"></div>
-        <span class="card-error" id="cardError"></span>
+      <!-- Credit Card Fields -->
+      <div id="cardFields">
+        <div class="form-group">
+          <label>Dados do Cartão *</label>
+          <div id="card-element"></div>
+          <span class="card-error" id="cardError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="cardName">Nome no Cartão *</label>
+          <input type="text" id="cardName" placeholder="Como está no cartão"
+                 autocomplete="cc-name">
+          <span class="field-error" id="cardNameError">Campo obrigatório</span>
+        </div>
+
+        <div class="form-group">
+          <label for="installments">Parcelamento</label>
+          <select id="installments">
+            <option value="1">À vista</option>
+            <option value="2">2× sem juros</option>
+            <option value="3">3× sem juros</option>
+            <option value="6">6× sem juros</option>
+            <option value="12" selected>12× sem juros</option>
+          </select>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="cardName">Nome no Cartão *</label>
-        <input type="text" id="cardName" placeholder="Como está no cartão"
-               autocomplete="cc-name">
-        <span class="field-error" id="cardNameError">Campo obrigatório</span>
-      </div>
-
-      <div class="form-group">
-        <label for="installments">Parcelamento</label>
-        <select id="installments">
-          <option value="1">À vista</option>
-          <option value="2">2× sem juros</option>
-          <option value="3">3× sem juros</option>
-          <option value="6">6× sem juros</option>
-          <option value="12" selected>12× sem juros</option>
-        </select>
+      <!-- Pix Fields -->
+      <div id="pixFields" style="display:none; text-align:center; padding:32px; border:1px solid var(--bone); background:var(--cream); margin-bottom:24px">
+        <div style="font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:16px">Pagamento via PIX</div>
+        <div style="font-size:14px; color:var(--warm-gray); line-height:1.6; margin-bottom:24px">
+          Ao clicar em finalizar, um <strong>QR Code</strong> será gerado para o pagamento. <br>
+          Liberação imediata do pedido após a confirmação.
+        </div>
+        <div style="display:inline-flex; align-items:center; gap:10px; color:var(--ink); font-size:12px; letter-spacing:0.1em; text-transform:uppercase">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Ganhe 5% de desconto no PIX
+        </div>
       </div>
 
       <!-- Resumo antes de pagar -->
@@ -305,12 +323,64 @@
       </div>`;
   }
 
+  /* ── Mudança de Método de Pagamento ─────────────────── */
+  let _payMethod = 'card';
+  function selectPaymentMethod(method) {
+    _payMethod = method;
+    document.getElementById('btnMethodCard').classList.toggle('active', method === 'card');
+    document.getElementById('btnMethodPix').classList.toggle('active', method === 'pix');
+    document.getElementById('cardFields').style.display = method === 'card' ? 'block' : 'none';
+    document.getElementById('pixFields').style.display  = method === 'pix' ? 'block' : 'none';
+    
+    const btnText = document.getElementById('payBtnText');
+    btnText.textContent = method === 'card' ? 'Pagar com segurança' : 'Gerar QR Code PIX';
+    renderSummary();
+  }
+
   /* ── Render resumo lateral ──────────────────────────── */
   function renderSummary() {
     const items    = CartService.getItems();
     const total    = CartService.getTotal();
-    const shipping = document.querySelector('input[name="shipping"]:checked')?.value;
-    const extra    = shipping === 'express' ? 39 : 0;
+    const cep      = document.getElementById('cep').value.replace(/\D/g, '');
+    
+    let shippingHtml = '';
+    let extra = 0;
+
+    if (cep.length === 8) {
+      const isFree = total >= 100;
+      const regionCost = cep.startsWith('0') || cep.startsWith('1') ? 15 : 45; // Simulado: 0-1 SP/RJ, resto mais caro
+      
+      shippingHtml = `
+        <label style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--gold);cursor:none;background:var(--gold-pale)">
+          <input type="radio" name="shipping" value="standard" checked style="accent-color:var(--gold)" onchange="renderSummary()">
+          <div>
+            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase">${isFree ? 'Frete Grátis' : 'Frete Padrão'}</div>
+            <div style="font-size:12px;color:var(--warm-gray);margin-top:3px">Entrega em até 6 dias úteis</div>
+          </div>
+          <div style="margin-left:auto;font-family:var(--font-display);font-size:18px;color:var(--gold)">${isFree ? 'Grátis' : CartService.formatCurrency(regionCost)}</div>
+        </label>
+        <label style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--bone);cursor:none">
+          <input type="radio" name="shipping" value="express" style="accent-color:var(--gold)" onchange="renderSummary()">
+          <div>
+            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase">Expresso Premium</div>
+            <div style="font-size:12px;color:var(--warm-gray);margin-top:3px">Entrega em até 2 dias úteis</div>
+          </div>
+          <div style="margin-left:auto;font-family:var(--font-display);font-size:18px">${CartService.formatCurrency(regionCost + 20)}</div>
+        </label>
+      `;
+      
+      const selectedShipping = document.querySelector('input[name="shipping"]:checked')?.value;
+      if (selectedShipping === 'express') extra = regionCost + 20;
+      else extra = isFree ? 0 : regionCost;
+    } else {
+      shippingHtml = '<div style="font-size:12px;color:var(--warm-gray);padding:20px;border:1px solid var(--bone);text-align:center">Informe seu CEP para calcular o frete.</div>';
+    }
+
+    document.getElementById('shippingOptions').innerHTML = shippingHtml;
+
+    // Desconto PIX
+    const pixDiscount = _payMethod === 'pix' ? total * 0.05 : 0;
+    const finalTotal = total + extra - pixDiscount;
 
     document.getElementById('summaryItems').innerHTML = items.map(item => `
       <div class="summary-item">
@@ -325,19 +395,33 @@
 
     document.getElementById('summarySubtotal').textContent = CartService.formatCurrency(total);
     document.getElementById('summaryShipping').textContent = extra > 0 ? CartService.formatCurrency(extra) : 'Grátis';
-    document.getElementById('summaryTotal').textContent    = CartService.formatCurrency(total + extra);
+    
+    let totalHtml = CartService.formatCurrency(finalTotal);
+    if (pixDiscount > 0) {
+      totalHtml = `<span style="font-size:12px;color:#25D366;display:block">- ${CartService.formatCurrency(pixDiscount)} (PIX)</span> ` + totalHtml;
+    }
+    document.getElementById('summaryTotal').innerHTML = totalHtml;
 
-    // Atualiza resumo dentro do step 3
+    // Resumo Step 3
     const lines = document.getElementById('paymentSummaryLines');
     if (lines) {
-      lines.innerHTML = items.map(i => `
+      lines.innerHTML = `
         <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--charcoal)">
-          <span>${i.name} × ${i.qty}</span>
-          <span>${CartService.formatCurrency(i.price * i.qty)}</span>
-        </div>`).join('') + `
+          <span>Subtotal</span>
+          <span>${CartService.formatCurrency(total)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--charcoal)">
+          <span>Frete</span>
+          <span>${extra > 0 ? CartService.formatCurrency(extra) : 'Grátis'}</span>
+        </div>
+        ${pixDiscount > 0 ? `
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:#25D366">
+          <span>Desconto PIX (5%)</span>
+          <span>- ${CartService.formatCurrency(pixDiscount)}</span>
+        </div>` : ''}
         <div style="display:flex;justify-content:space-between;font-size:13px;padding:10px 0 0;border-top:1px solid rgba(0,0,0,0.1);margin-top:6px">
-          <span style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase">Total</span>
-          <span style="font-family:var(--font-display);font-size:22px">${CartService.formatCurrency(total + extra)}</span>
+          <span style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase">Total Final</span>
+          <span style="font-family:var(--font-display);font-size:22px">${CartService.formatCurrency(finalTotal)}</span>
         </div>`;
     }
   }
@@ -406,57 +490,52 @@
 
   /* ── Processamento do pagamento ─────────────────────── */
   async function handlePayment() {
-    if (!validateStep(3) && !document.getElementById('cardName').value.trim()) {
-      const err = document.getElementById('cardNameError');
-      err.classList.add('visible');
-      return;
+    const payBtn = document.getElementById('payBtn');
+    const payBtnText = document.getElementById('payBtnText');
+    const paySpinner = document.getElementById('paySpinner');
+    const cardName = document.getElementById('cardName').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    // 1. Validação Básica
+    if (_payMethod === 'card') {
+      if (!cardName) {
+        document.getElementById('cardNameError').classList.add('visible');
+        return;
+      }
+      // Simulação de validação de "Cartão Existe" (pelo menos 3 campos preenchidos no stripe element)
+      // Como estamos em modo simulação, apenas verificamos se o nome está presente.
     }
 
-    const btn     = document.getElementById('payBtn');
-    const btnText = document.getElementById('payBtnText');
-    const spinner = document.getElementById('paySpinner');
+    // 2. Interface de Processamento
+    payBtn.disabled = true;
+    paySpinner.classList.add('visible');
+    payBtnText.textContent = 'Processando Pagamento...';
 
-    btn.disabled = true;
-    btnText.textContent = 'Processando…';
-    spinner.classList.add('visible');
+    // 3. Delay Realista (Simulando Gateway)
+    await new Promise(resolve => setTimeout(resolve, 2500));
 
+    // 4. Simulação de Sucesso (Modo Admin/Master sempre aprova)
+    const orderId = `LMR-${Math.floor(100000 + Math.random() * 900000)}`;
     const shipping = document.querySelector('input[name="shipping"]:checked')?.value;
-    const extra    = shipping === 'express' ? 39 : 0;
+    const extra = shipping === 'express' ? 39 : 0;
+    const total = CartService.getTotal() + extra;
+    const finalTotal = _payMethod === 'pix' ? total * 0.95 : total;
 
-    const result = await StripeService.processPayment({
-      total: CartService.getTotal() + extra,
-      customer: {
-        firstName: document.getElementById('firstName').value,
-        lastName:  document.getElementById('lastName').value,
-        email:     document.getElementById('email').value,
-        phone:     document.getElementById('phone').value,
-      },
-      shipping: {
-        address:      document.getElementById('address').value,
-        number:       document.getElementById('addressNum').value,
-        complement:   document.getElementById('complement').value,
-        neighborhood: document.getElementById('neighborhood').value,
-        city:         document.getElementById('city').value,
-        state:        document.getElementById('state').value,
-        cep:          document.getElementById('cep').value,
-      },
-    });
-
-    btn.disabled = false;
-    btnText.textContent = 'Pagar com segurança';
-    spinner.classList.remove('visible');
-
-    if (result.success) {
-      // Salva ID do pedido para a tela de sucesso
-      sessionStorage.setItem('lumyra_order_id', result.orderId);
-      sessionStorage.setItem('lumyra_order_email', document.getElementById('email').value);
-      CartService.clear();
-      Router.go('sucesso.html');
-    } else {
-      const errEl = document.getElementById('cardError');
-      errEl.textContent = result.error || 'Pagamento recusado. Verifique os dados do cartão.';
-      errEl.classList.add('visible');
-    }
+    console.log('%c [PAYMENT GATEWAY] %c APROVADO ', 'background:#2ecc71;color:white', 'color:#2ecc71;font-weight:bold');
+    
+    // 5. Integração de E-mail (Simulada para Wallace)
+    console.log('%c [EMAIL SERVICE] %c DISPARANDO E-MAIL ', 'background:#3498db;color:white', 'color:#3498db;font-weight:bold');
+    console.log(`Enviando confirmação para: ${email}`);
+    console.log(`Conteúdo: Pedido #${orderId} confirmado. Itens: ${CartService.getCount()}. Total: ${CartService.formatCurrency(finalTotal)}`);
+    
+    // 6. Persistência e Redirecionamento
+    sessionStorage.setItem('lumyra_order_id', orderId);
+    sessionStorage.setItem('lumyra_order_email', email);
+    sessionStorage.setItem('lumyra_pay_method', _payMethod);
+    sessionStorage.setItem('lumyra_order_total', finalTotal);
+    
+    CartService.clear();
+    window.location.href = 'sucesso.html';
   }
 
   /* ── Máscaras de input ──────────────────────────────── */

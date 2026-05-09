@@ -17,11 +17,12 @@ class Header {
    * automaticamente por _resolvePath().
    */
   static ROUTES = {
-    'Novas Peças':   '/#novas-pecas',
-    'Coleções':      '/pages/colecoes.html',
-    'Alianças':      '/pages/colecoes.html?categoria=aliancas',
-    'Relógios':      '/pages/colecoes.html?categoria=relogios',
-    'Sobre Nós':     '/#sobre',
+    'Início':    '/index.html',
+    'Joias':     '/pages/joias.html',
+    'Coleções':  '/pages/colecoes.html',
+    'Alianças':  '/pages/aliancas.html',
+    'Relógios':  '/pages/relogios.html',
+    'Presentes': '/pages/presentes.html',
   };
 
   /** Ponto de entrada — chamado no DOMContentLoaded de cada página */
@@ -61,11 +62,12 @@ class Header {
 
       <ul class="nav-links" id="navLinks">
         ${Object.entries(Header.ROUTES).map(([label, path]) => `
-          <li>
+          <li class="${['Joias', 'Coleções', 'Presentes', 'Alianças', 'Relógios'].includes(label) ? 'has-mega' : ''}">
             <a href="${Header._resolvePath(path)}"
                class="${Header._isActive(path) ? 'active' : ''}">
               ${label}
             </a>
+            ${Header._getMegaMenu(label)}
           </li>
         `).join('')}
       </ul>
@@ -287,6 +289,110 @@ class Header {
     if (path === '/' && (current === '/' || current.endsWith('index.html'))) return true;
     return path && current.includes(path.split('?')[0].replace(/^\//, ''));
   }
+
+  /** Retorna o HTML do Mega Menu para uma determinada aba */
+  static _getMegaMenu(label) {
+    const isSubpage = window.location.pathname.includes('/pages/');
+    const base      = isSubpage ? '' : 'pages/';
+
+    const menus = {
+      'Joias': `
+        <div class="mega-menu">
+          <div class="mega-col">
+            <h4>Categorias</h4>
+            <ul class="mega-list">
+              <li><a href="${base}joias.html?cat=aneis">Anéis</a></li>
+              <li><a href="${base}joias.html?cat=brincos">Brincos</a></li>
+              <li><a href="${base}joias.html?cat=colares">Colares</a></li>
+              <li><a href="${base}joias.html?cat=pulseiras">Pulseiras</a></li>
+            </ul>
+          </div>
+          <div class="mega-col">
+            <h4>Destaques</h4>
+            <ul class="mega-list">
+              <li><a href="${base}joias.html?filter=new">Novas Peças</a></li>
+              <li><a href="${base}joias.html?filter=conjunto" style="color: var(--gold); font-weight: 600;">Conjuntos Exclusivos</a></li>
+              <li><a href="${base}joias.html?filter=oferta" style="color: #c5a059;">Ofertas da Estação</a></li>
+            </ul>
+          </div>
+        </div>`,
+      'Coleções': `
+        <div class="mega-menu">
+          <div class="mega-col">
+            <h4>Linhas</h4>
+            <ul class="mega-list">
+              <li><a href="${base}colecoes.html?linha=essenciais">Essenciais Lumyra</a></li>
+              <li><a href="${base}colecoes.html?linha=diamantes">Diamantes Certificados</a></li>
+              <li><a href="${base}colecoes.html?linha=2025">Coleção 2025</a></li>
+            </ul>
+          </div>
+          <div class="mega-col">
+            <h4>Inpiração</h4>
+            <ul class="mega-list">
+              <li><a href="${base}colecoes.html?filter=editorial">Editorial 2024</a></li>
+              <li><a href="${base}colecoes.html?filter=artesanal">O Processo Artesanal</a></li>
+            </ul>
+          </div>
+        </div>`,
+      'Alianças': `
+        <div class="mega-menu">
+          <div class="mega-col">
+            <h4>Estilos</h4>
+            <ul class="mega-list">
+              <li><a href="${base}aliancas.html?estilo=tradicional">Tradicionais</a></li>
+              <li><a href="${base}aliancas.html?estilo=moderna">Modernas</a></li>
+              <li><a href="${base}aliancas.html?estilo=cravejada">Cravejadas</a></li>
+            </ul>
+          </div>
+          <div class="mega-col">
+            <h4>Ocasião</h4>
+            <ul class="mega-list">
+              <li><a href="${base}aliancas.html?ocasiao=noivado">Noivado</a></li>
+              <li><a href="${base}aliancas.html?ocasiao=casamento">Casamento</a></li>
+              <li><a href="${base}aliancas.html?ocasiao=bodas">Bodas</a></li>
+            </ul>
+          </div>
+        </div>`,
+      'Relógios': `
+        <div class="mega-menu">
+          <div class="mega-col">
+            <h4>Gênero</h4>
+            <ul class="mega-list">
+              <li><a href="${base}relogios.html?genero=feminino">Femininos</a></li>
+              <li><a href="${base}relogios.html?genero=masculino">Masculinos</a></li>
+            </ul>
+          </div>
+          <div class="mega-col">
+            <h4>Estilo</h4>
+            <ul class="mega-list">
+              <li><a href="${base}relogios.html?estilo=social">Social</a></li>
+              <li><a href="${base}relogios.html?filter=conjunto" style="color: var(--gold); font-weight: 600;">Kit Relógio + Acessório</a></li>
+              <li><a href="${base}relogios.html?filter=oferta" style="color: #c5a059;">Promoções</a></li>
+            </ul>
+          </div>
+        </div>`,
+      'Presentes': `
+        <div class="mega-menu">
+          <div class="mega-col">
+            <h4>Por Valor</h4>
+            <ul class="mega-list">
+              <li><a href="${base}presentes.html?preco=ate-1000">Até R$ 1.000</a></li>
+              <li><a href="${base}presentes.html?preco=1000-5000">R$ 1.000 - R$ 5.000</a></li>
+              <li><a href="${base}presentes.html?preco=acima-5000">Acima de R$ 5.000</a></li>
+            </ul>
+          </div>
+          <div class="mega-col">
+            <h4>Por Ocasião</h4>
+            <ul class="mega-list">
+              <li><a href="${base}presentes.html?ocasiao=aniversario">Aniversário</a></li>
+              <li><a href="${base}presentes.html?ocasiao=formatura">Formatura</a></li>
+              <li><a href="${base}presentes.html?ocasiao=maternidade">Maternidade</a></li>
+            </ul>
+          </div>
+        </div>`
+    };
+    return menus[label] || '';
+  }
 }
 
 /* ── CSS DO HEADER (injetado via JS para ser auto-contido) ─── */
@@ -320,7 +426,7 @@ class Header {
       display: flex; gap: 40px; list-style: none;
     }
     .nav-links a {
-      font-size: 11px; letter-spacing: 0.2em;
+      font-size: 13px; letter-spacing: 0.15em;
       text-transform: uppercase; color: var(--charcoal);
       text-decoration: none; position: relative;
       transition: color 0.3s;
@@ -341,7 +447,7 @@ class Header {
 
     .nav-cart-btn {
       display: flex; align-items: center; gap: 8px;
-      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
       background: var(--ink); color: var(--cream);
       border: none; padding: 10px 20px; cursor: none;
       transition: background 0.3s;
