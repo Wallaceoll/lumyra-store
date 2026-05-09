@@ -324,10 +324,10 @@ button { font-family: var(--font-body); cursor: none; }
 .add-to-cart:hover { background: var(--gold-light); }
 
 .editorial-strip { display: grid; grid-template-columns: 1fr 1fr; min-height: 80vh; border-top: 1px solid var(--bone); }
-.editorial-dark { background: var(--ink); padding: 80px 64px; display: flex; flex-direction: column; justify-content: space-between; }
-.editorial-dark h2 { font-family: var(--font-display); font-size: clamp(48px, 5vw, 80px); font-weight: 300; color: var(--cream); line-height: 1.0; }
+.editorial-dark { background: #0E0D0B; padding: 80px 64px; display: flex; flex-direction: column; justify-content: space-between; }
+.editorial-dark h2 { font-family: var(--font-display); font-size: clamp(48px, 5vw, 80px); font-weight: 300; color: #F9F6F0; line-height: 1.0; }
 .editorial-dark h2 em { color: var(--gold-light); font-style: italic; }
-.editorial-detail { font-size: 16px; letter-spacing: 0.08em; color: rgba(255,255,255,0.55); line-height: 2.1; max-width: 400px; }
+.editorial-detail { font-size: 16px; letter-spacing: 0.08em; color: rgba(255,255,255,0.7); line-height: 2.1; max-width: 400px; }
 .editorial-img { position: relative; overflow: hidden; }
 .editorial-img img { width: 100%; height: 100%; object-fit: cover; }
 .editorial-img .overlay-text { position: absolute; bottom: 40px; right: 40px; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--cream); writing-mode: vertical-lr; }
