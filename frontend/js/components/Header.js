@@ -7,11 +7,11 @@ class Header {
    * automaticamente por _resolvePath().
    */
   static ROUTES = {
-    'Início':    '/index.html',
-    'Joias':     '/pages/joias.html',
-    'Coleções':  '/pages/colecoes.html',
-    'Alianças':  '/pages/aliancas.html',
-    'Relógios':  '/pages/relogios.html',
+    'Início': '/index.html',
+    'Joias': '/pages/joias.html',
+    'Coleções': '/pages/colecoes.html',
+    'Alianças': '/pages/aliancas.html',
+    'Relógios': '/pages/relogios.html',
     'Presentes': '/pages/presentes.html',
   };
 
@@ -30,7 +30,7 @@ class Header {
     Header.updateCartBadge(CartService.getCount());
   }
 
-  
+
   static _injectCursor() {
     if (document.getElementById('lumyra-cursor')) return;
     const el = document.createElement('div');
@@ -42,10 +42,10 @@ class Header {
     if (document.getElementById('lmr-nav')) return;
 
     const isSubpage = window.location.pathname.includes('/pages/');
-    const base      = isSubpage ? '../' : '';
+    const base = isSubpage ? '../' : '';
 
     const nav = document.createElement('nav');
-    nav.id    = 'lmr-nav';
+    nav.id = 'lmr-nav';
     nav.innerHTML = `
       <a href="${base}index.html" class="nav-logo">Lum<span>y</span>ra</a>
 
@@ -81,7 +81,7 @@ class Header {
     document.getElementById('navCartBtn').addEventListener('click', Header.toggleCart);
     document.getElementById('navMenuBtn').addEventListener('click', Header._toggleMobileMenu);
     document.getElementById('themeToggle').addEventListener('click', Header._toggleTheme);
-    
+
     // Aplica tema salvo
     Header._applyTheme(localStorage.getItem('lumyra_theme') || 'light');
   }
@@ -92,14 +92,14 @@ class Header {
     // Overlay
     const overlay = document.createElement('div');
     overlay.className = 'cart-overlay';
-    overlay.id        = 'cartOverlay';
+    overlay.id = 'cartOverlay';
     overlay.addEventListener('click', Header.toggleCart);
     document.body.appendChild(overlay);
 
     // Drawer
     const drawer = document.createElement('div');
     drawer.className = 'cart-drawer';
-    drawer.id        = 'cartDrawer';
+    drawer.id = 'cartDrawer';
     drawer.innerHTML = `
       <div class="cart-header">
         <h2 class="cart-title">Carrinho</h2>
@@ -125,7 +125,7 @@ class Header {
     document.getElementById('cartClose').addEventListener('click', Header.toggleCart);
     document.getElementById('goToCheckout').addEventListener('click', () => {
       const isSubpage = window.location.pathname.includes('/pages/');
-      const base      = isSubpage ? '../' : '';
+      const base = isSubpage ? '../' : '';
       window.location.href = `${base}pages/checkout.html`;
     });
 
@@ -136,18 +136,18 @@ class Header {
 
   static _injectToast() {
     if (document.getElementById('lumyra-toast')) return;
-    const el  = document.createElement('div');
-    el.id     = 'lumyra-toast';
+    const el = document.createElement('div');
+    el.id = 'lumyra-toast';
     el.setAttribute('role', 'status');
     el.setAttribute('aria-live', 'polite');
     document.body.appendChild(el);
   }
 
-  
+
   static _renderCartItems() {
     const container = document.getElementById('cartItems');
-    const footer    = document.getElementById('cartFooter');
-    const totalEl   = document.getElementById('cartTotalPrice');
+    const footer = document.getElementById('cartFooter');
+    const totalEl = document.getElementById('cartTotalPrice');
     if (!container) return;
 
     const items = CartService.getItems();
@@ -188,14 +188,14 @@ class Header {
     container.querySelectorAll('[data-action]').forEach(btn => {
       btn.addEventListener('click', () => {
         const { action, id } = btn.dataset;
-        if (action === 'inc')    CartService.updateQty(id, 1);
-        if (action === 'dec')    CartService.updateQty(id, -1);
+        if (action === 'inc') CartService.updateQty(id, 1);
+        if (action === 'dec') CartService.updateQty(id, -1);
         if (action === 'remove') CartService.remove(id);
       });
     });
   }
 
-  
+
   static updateCartBadge(count) {
     const badge = document.getElementById('cartBadge');
     if (!badge) return;
@@ -203,7 +203,7 @@ class Header {
     badge.classList.toggle('visible', count > 0);
   }
 
-  
+
   static toggleCart() {
     document.getElementById('cartOverlay')?.classList.toggle('open');
     document.getElementById('cartDrawer')?.classList.toggle('open');
@@ -214,10 +214,10 @@ class Header {
     document.getElementById('cartDrawer')?.classList.remove('open');
   }
 
-  
+
   static _toggleTheme() {
     const current = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
-    const next    = current === 'dark' ? 'light' : 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
     Header._applyTheme(next);
   }
 
@@ -225,26 +225,26 @@ class Header {
     const isDark = theme === 'dark';
     document.body.classList.toggle('dark-mode', isDark);
     localStorage.setItem('lumyra_theme', theme);
-    
+
     // Atualiza ícones
-    const sun  = document.querySelector('.sun-icon');
+    const sun = document.querySelector('.sun-icon');
     const moon = document.querySelector('.moon-icon');
     if (sun && moon) {
-      sun.style.display  = isDark ? 'none' : 'block';
+      sun.style.display = isDark ? 'none' : 'block';
       moon.style.display = isDark ? 'block' : 'none';
     }
   }
 
-  
+
   static _toggleMobileMenu() {
     const links = document.getElementById('navLinks');
-    const btn   = document.getElementById('navMenuBtn');
+    const btn = document.getElementById('navMenuBtn');
     if (!links) return;
     const open = links.classList.toggle('open');
     btn.setAttribute('aria-expanded', open);
   }
 
-  
+
   static _bindScrollBehavior() {
     const nav = document.getElementById('lmr-nav');
     if (!nav) return;
@@ -253,14 +253,14 @@ class Header {
     onScroll(); // estado inicial
   }
 
-  
+
   static _bindCursorBehavior() {
     const cursor = document.getElementById('lumyra-cursor');
     if (!cursor) return;
 
     document.addEventListener('mousemove', e => {
       cursor.style.left = e.clientX + 'px';
-      cursor.style.top  = e.clientY + 'px';
+      cursor.style.top = e.clientY + 'px';
     }, { passive: true });
 
     // Aplica efeito de hover nos elementos interativos
@@ -273,7 +273,7 @@ class Header {
     });
   }
 
-  
+
   static _setupRevealObserver() {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
@@ -282,7 +282,7 @@ class Header {
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   }
 
-  
+
   /** Resolve path relativo dependendo da página atual */
   static _resolvePath(path) {
     if (path.startsWith('http')) return path;
@@ -302,7 +302,7 @@ class Header {
   /** Retorna o HTML do Mega Menu para uma determinada aba */
   static _getMegaMenu(label) {
     const isSubpage = window.location.pathname.includes('/pages/');
-    const base      = isSubpage ? '' : 'pages/';
+    const base = isSubpage ? '' : 'pages/';
 
     const menus = {
       'Joias': `
@@ -332,7 +332,7 @@ class Header {
             <ul class="mega-list">
               <li><a href="${base}colecoes.html?linha=essenciais">Essenciais Lumyra</a></li>
               <li><a href="${base}colecoes.html?linha=diamantes">Diamantes Certificados</a></li>
-              <li><a href="${base}colecoes.html?linha=2025">Coleção 2025</a></li>
+              <li><a href="${base}colecoes.html?linha=2026">Coleção 2026</a></li>
             </ul>
           </div>
           <div class="mega-col">
@@ -407,7 +407,7 @@ class Header {
 (function _injectHeaderStyles() {
   if (document.getElementById('lmr-header-styles')) return;
   const style = document.createElement('style');
-  style.id    = 'lmr-header-styles';
+  style.id = 'lmr-header-styles';
   style.textContent = `
     #lmr-nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
