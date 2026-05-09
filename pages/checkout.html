@@ -307,6 +307,7 @@
 <script src="../js/services/CartService.js"></script>
 <script src="../js/services/ProductService.js"></script>
 <script src="../js/services/StripeService.js"></script>
+<script src="../js/services/EmailService.js"></script>
 <script src="../js/components/Header.js"></script>
 <script src="../js/main.js"></script>
 
@@ -523,10 +524,14 @@
 
     console.log('%c [PAYMENT GATEWAY] %c APROVADO ', 'background:#2ecc71;color:white', 'color:#2ecc71;font-weight:bold');
     
-    // 5. Integração de E-mail (Simulada para Wallace)
-    console.log('%c [EMAIL SERVICE] %c DISPARANDO E-MAIL ', 'background:#3498db;color:white', 'color:#3498db;font-weight:bold');
-    console.log(`Enviando confirmação para: ${email}`);
-    console.log(`Conteúdo: Pedido #${orderId} confirmado. Itens: ${CartService.getCount()}. Total: ${CartService.formatCurrency(finalTotal)}`);
+    // 5. Integração de E-mail Real (Spring Boot)
+    EmailService.sendOrderConfirmation({
+      orderId:        orderId,
+      customerName:   `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`,
+      customerEmail:  email,
+      total:          CartService.formatCurrency(finalTotal),
+      paymentMethod:  _payMethod === 'pix' ? 'PIX' : 'Cartão de Crédito'
+    });
     
     // 6. Persistência e Redirecionamento
     sessionStorage.setItem('lumyra_order_id', orderId);
