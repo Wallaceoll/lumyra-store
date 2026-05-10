@@ -110,7 +110,7 @@
   }
 
   .hero .btn-primary {
-    padding: 12px 28px;
+    padding: 12px 22px;
     font-size: 13px;
   }
 }
@@ -226,6 +226,10 @@ body.dark-mode .phil-content p {
     padding: 120px 32px 60px;
     align-items: center;
     text-align: center;
+  }
+
+  .hero .btn-primary {
+    padding: 14px 24px;
   }
 
   .hero-left .eyebrow {
