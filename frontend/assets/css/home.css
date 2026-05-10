@@ -27,6 +27,11 @@
   }
   .hero-sub { color: #333333; max-width: 480px; }
   body.dark-mode .hero-sub { color: #C8C2B8; }
+  
+  .hero .btn-primary {
+    padding: 12px 28px;
+    font-size: 13px;
+  }
 }
 
 .philosophy { padding: 140px 64px; display: grid; grid-template-columns: auto 1fr; gap: 80px; align-items: center; max-width: 1400px; margin: 0 auto; }
