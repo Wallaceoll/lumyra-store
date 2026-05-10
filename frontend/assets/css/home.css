@@ -141,7 +141,7 @@
 .phil-content p {
   font-size: 18px;
   line-height: 1.9;
-  color: var(--warm-gray);
+  color: #333333;
   max-width: 640px;
 }
 
