@@ -152,7 +152,6 @@ body.dark-mode .phil-content p {
 .editorial-strip {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: 80vh;
   border-top: 1px solid var(--bone);
 }
 
@@ -161,7 +160,8 @@ body.dark-mode .phil-content p {
   padding: 80px 64px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 40px;
 }
 
 .editorial-dark h2 {
